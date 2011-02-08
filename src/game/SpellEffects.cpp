@@ -1140,7 +1140,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     pGameObj->SetRespawnTime(creatureTarget->GetRespawnTime()-time(NULL));
                     pGameObj->SetOwnerGuid(m_caster->GetObjectGuid() );
-                    pGameObj->SetUInt32Value(GAMEOBJECT_LEVEL, m_caster->getLevel() );
+                    //pGameObj->SetUInt32Value(GAMEOBJECT_LEVEL, m_caster->getLevel() );
                     pGameObj->SetSpellId(m_spellInfo->Id);
 
                     creatureTarget->ForcedDespawn();
@@ -3563,7 +3563,7 @@ void Spell::EffectApplyAura(SpellEffectIndex eff_idx)
 
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Spell: Aura is: %u", m_spellInfo->EffectApplyAuraName[eff_idx]);
 
-    Aura* Aur = CreateAura(m_spellInfo, eff_idx, &m_currentBasePoints[eff_idx], spellAuraHolder, unitTarget, caster, m_CastItem);
+    Aura* Aur = CreateAura(m_spellInfo, eff_idx, &m_currentBasePoints[eff_idx], spellAuraHolder, unitTarget, caster, m_CastItem, this);
 
     // Now Reduce spell duration using data received at spell hit
     int32 duration = Aur->GetAuraMaxDuration();
@@ -6130,6 +6130,24 @@ void Spell::EffectThreat(SpellEffectIndex /*eff_idx*/)
     if(!unitTarget->CanHaveThreatList())
         return;
 
+    // pet's growl bonus threat, hacky implementation :-/
+    if( m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellInfo->SpellIconID == 201)
+    {
+        // search for "guard dog"
+        Unit::AuraList const& mDummyAuras = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
+        for(Unit::AuraList::const_iterator i = mDummyAuras.begin(); i != mDummyAuras.end(); ++i)
+        {
+            SpellEntry const *m_spellProto = (*i)->GetSpellProto();
+            if( m_spellProto && m_spellProto->SpellFamilyName == SPELLFAMILY_PET &&
+                m_spellProto->SpellIconID == 201)
+            {
+                damage+= (*i)->GetModifier()->m_amount*damage/100;
+                break;
+            }
+        }
+    }
+
+
     unitTarget->AddThreat(m_caster, float(damage), false, GetSpellSchoolMask(m_spellInfo), m_spellInfo);
 }
 
@@ -6685,6 +6703,17 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 44870, true);
                     break;
                 }
+                case 37834: // Unbansih Azaloth
+                    if(m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    if(Creature* pTemp = (Creature*) unitTarget)
+                    {
+                        pTemp->AI()->AttackStart(m_caster);
+                    }
+                    ((Player*)m_caster)->KilledMonsterCredit(21892);
+
+                    break;
                 case 45204: // Clone Me!
                     unitTarget->CastSpell(m_caster, damage, true);
                     break;
@@ -6705,6 +6734,16 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     }
 
                     return;
+                }
+                case 45151:                                 // Burn - SWP Brutallus
+                {
+                    if (!unitTarget || unitTarget == m_caster || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+                    if (unitTarget->HasAura(46394, EFFECT_INDEX_0))
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 46394, true);
+                    break;
                 }
                 case 45668:                                 // Ultra-Advanced Proto-Typical Shortening Blaster
                 {
@@ -6995,7 +7034,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                 }
                 case 51904:                                 // Summon Ghouls Of Scarlet Crusade
                 {
-                    if(!unitTarget)
+                    if(!unitTarget || unitTarget->IsFriendlyTo(m_caster))
                         return;
 
                     unitTarget->CastSpell(unitTarget, 54522, true);

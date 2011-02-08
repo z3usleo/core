@@ -2858,21 +2858,23 @@ void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool ex
     else
         return;                                             // ignore ranged case
 
-    uint32 extraAttacks = m_extraAttacks;
-
     // melee attack spell casted at main hand attack only
     if (attType == BASE_ATTACK && m_currentSpells[CURRENT_MELEE_SPELL])
     {
         m_currentSpells[CURRENT_MELEE_SPELL]->cast();
 
-        // not recent extra attack only at any non extra attack (melee spell case)
-        if(!extra && extraAttacks)
+        // extra attack only at any non extra attack (melee spell case)
+        uint32 current_extraAttacks = m_extraAttacks;
+        if (!extra && current_extraAttacks)
         {
-            while(m_extraAttacks)
+            while (current_extraAttacks)
             {
                 AttackerStateUpdate(pVictim, BASE_ATTACK, true);
-                if(m_extraAttacks > 0)
+                if (current_extraAttacks > 0)
+                {
+                    --current_extraAttacks;
                     --m_extraAttacks;
+                }
             }
         }
         return;
@@ -2900,13 +2902,17 @@ void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool ex
     pVictim->AttackedBy(this);
 
     // extra attack only at any non extra attack (normal case)
-    if(!extra && extraAttacks)
+    uint32 current_extraAttacks = m_extraAttacks;
+    if (!extra && current_extraAttacks)
     {
-        while(m_extraAttacks)
+        while (current_extraAttacks)
         {
             AttackerStateUpdate(pVictim, BASE_ATTACK, true);
-            if(m_extraAttacks > 0)
+            if (current_extraAttacks > 0)
+            {
+                --current_extraAttacks;
                 --m_extraAttacks;
+            }
         }
     }
 }
@@ -4415,7 +4421,7 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
                     case SPELL_AURA_PERIODIC_HEAL:
                     case SPELL_AURA_OBS_MOD_HEALTH:
                     case SPELL_AURA_PERIODIC_MANA_LEECH:
-                    case SPELL_AURA_OBS_MOD_MANA:
+                    case SPELL_AURA_OBS_MOD_ENERGY:
                     case SPELL_AURA_POWER_BURN_MANA:
                         break;
                     case SPELL_AURA_PERIODIC_ENERGIZE:      // all or self or clear non-stackable
@@ -5524,7 +5530,7 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo *pInfo)
             data << uint32(pInfo->absorb);                  // absorb
             data << uint8(pInfo->critical ? 1 : 0);         // new 3.1.2 critical flag
             break;
-        case SPELL_AURA_OBS_MOD_MANA:
+        case SPELL_AURA_OBS_MOD_ENERGY:
         case SPELL_AURA_PERIODIC_ENERGIZE:
             data << uint32(mod->m_miscvalue);               // power type
             data << uint32(pInfo->damage);                  // damage

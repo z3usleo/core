@@ -71,7 +71,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleInvisibility,                              // 18 SPELL_AURA_MOD_INVISIBILITY
     &Aura::HandleInvisibilityDetect,                        // 19 SPELL_AURA_MOD_INVISIBILITY_DETECTION
     &Aura::HandleAuraModTotalHealthPercentRegen,            // 20 SPELL_AURA_OBS_MOD_HEALTH
-    &Aura::HandleAuraModTotalManaPercentRegen,              // 21 SPELL_AURA_OBS_MOD_MANA
+    &Aura::HandleAuraModTotalEnergyPercentRegen,            // 21 SPELL_AURA_OBS_MOD_ENERGY
     &Aura::HandleAuraModResistance,                         // 22 SPELL_AURA_MOD_RESISTANCE
     &Aura::HandlePeriodicTriggerSpell,                      // 23 SPELL_AURA_PERIODIC_TRIGGER_SPELL
     &Aura::HandlePeriodicEnergize,                          // 24 SPELL_AURA_PERIODIC_ENERGIZE
@@ -521,10 +521,15 @@ PersistentAreaAura::~PersistentAreaAura()
 }
 
 SingleEnemyTargetAura::SingleEnemyTargetAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target,
-Unit *caster, Item* castItem) : Aura(spellproto, eff, currentBasePoints, holder, target, caster, castItem)
+Unit *caster, Item* castItem, Spell* createdBySpell) : Aura(spellproto, eff, currentBasePoints, holder, target, caster, castItem)
+
 {
     if (caster)
-        m_castersTargetGuid = caster->GetTypeId()==TYPEID_PLAYER ? ((Player*)caster)->GetSelectionGuid() : caster->GetTargetGuid();
+    {
+        m_castersTargetGuid = createdBySpell->GetTargetForPeriodicTriggerAura();
+	    if (m_castersTargetGuid.IsEmpty())
+            m_castersTargetGuid = target->GetObjectGuid();
+    }
 }
 
 SingleEnemyTargetAura::~SingleEnemyTargetAura()
@@ -536,7 +541,7 @@ Unit* SingleEnemyTargetAura::GetTriggerTarget() const
     return ObjectAccessor::GetUnit(*(m_spellAuraHolder->GetTarget()), m_castersTargetGuid);
 }
 
-Aura* CreateAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster, Item* castItem)
+Aura* CreateAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster, Item* castItem, Spell* createdBySpell)
 {
     if (IsAreaAuraEffect(spellproto->Effect[eff]))
         return new AreaAura(spellproto, eff, currentBasePoints, holder, target, caster, castItem);
@@ -546,7 +551,7 @@ Aura* CreateAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *curr
     if(SpellEntry const* triggeredSpellInfo = sSpellStore.LookupEntry(triggeredSpellId))
         for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
             if (triggeredSpellInfo->EffectImplicitTargetA[i] == TARGET_SINGLE_ENEMY)
-                return new SingleEnemyTargetAura(spellproto, eff, currentBasePoints, holder, target, caster, castItem);
+                return new SingleEnemyTargetAura(spellproto, eff, currentBasePoints, holder, target, caster, castItem, createdBySpell);
 
     return new Aura(spellproto, eff, currentBasePoints, holder, target, caster, castItem);
 }
@@ -1121,9 +1126,10 @@ void Aura::HandleAddModifier(bool apply, bool Real)
 void Aura::TriggerSpell()
 {
     ObjectGuid casterGUID = GetCasterGuid();
+    Unit* caster = GetCaster();
     Unit* triggerTarget = GetTriggerTarget();
 
-    if (casterGUID.IsEmpty() || !triggerTarget)
+    if (casterGUID.IsEmpty() || !triggerTarget || !caster)
         return;
 
     // generic casting code with custom spells and target/caster customs
@@ -1953,14 +1959,11 @@ void Aura::TriggerSpell()
 
     // All ok cast by default case
     if (triggeredSpellInfo)
-        triggerTarget->CastSpell(triggerTarget, triggeredSpellInfo, true, NULL, this, casterGUID);
+        caster->CastSpell(triggerTarget, triggeredSpellInfo, true, NULL, this, casterGUID);
     else
     {
-        if (Unit* caster = GetCaster())
-        {
-            if (triggerTarget->GetTypeId() != TYPEID_UNIT || !sScriptMgr.OnEffectDummy(caster, GetId(), GetEffIndex(), (Creature*)triggerTarget))
-                sLog.outError("Aura::TriggerSpell: Spell %u have 0 in EffectTriggered[%d], not handled custom case?",GetId(),GetEffIndex());
-        }
+        if (triggerTarget->GetTypeId() != TYPEID_UNIT || !sScriptMgr.OnEffectDummy(caster, GetId(), GetEffIndex(), (Creature*)triggerTarget))
+            sLog.outError("Aura::TriggerSpell: Spell %u have 0 in EffectTriggered[%d], not handled custom case?",GetId(),GetEffIndex());
     }
 }
 
@@ -5194,6 +5197,10 @@ void Aura::HandleAuraModStalked(bool apply, bool /*Real*/)
         GetTarget()->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TRACK_UNIT);
     else
         GetTarget()->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TRACK_UNIT);
+
+    // assassins mark fix
+    if(m_removeMode == AURA_REMOVE_BY_DEFAULT && m_duration <= 0 && GetSpellProto()->Id == 46459)
+        GetTarget()->DealDamage(GetTarget(), GetTarget()->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 }
 
 /*********************************************************/
@@ -5845,7 +5852,7 @@ void Aura::HandleAuraModTotalHealthPercentRegen(bool apply, bool /*Real*/)
     m_isPeriodic = apply;
 }
 
-void Aura::HandleAuraModTotalManaPercentRegen(bool apply, bool /*Real*/)
+void Aura::HandleAuraModTotalEnergyPercentRegen(bool apply, bool /*Real*/)
 {
     if(m_modifier.periodictime == 0)
         m_modifier.periodictime = 1000;
@@ -7593,17 +7600,12 @@ void Aura::PeriodicTick()
             }
             break;
         }
+        case SPELL_AURA_OBS_MOD_ENERGY:
         case SPELL_AURA_PERIODIC_ENERGIZE:
         {
             // don't energize target if not alive, possible death persistent effects
             if (!target->isAlive())
                 return;
-
-            // ignore non positive values (can be result apply spellmods to aura damage
-            uint32 pdamage = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
-
-            DETAIL_FILTER_LOG(LOG_FILTER_PERIODIC_AFFECTS, "PeriodicTick: %s energize %s for %u dmg inflicted by %u",
-                GetCasterGuid().GetString().c_str(), target->GetGuidStr().c_str(), pdamage, GetId());
 
             if(m_modifier.m_miscvalue < 0 || m_modifier.m_miscvalue >= MAX_POWERS)
                 break;
@@ -7613,39 +7615,24 @@ void Aura::PeriodicTick()
             if(target->GetMaxPower(power) == 0)
                 break;
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
-            target->SendPeriodicAuraLog(&pInfo);
-
-            int32 gain = target->ModifyPower(power,pdamage);
-
-            if(Unit* pCaster = GetCaster())
-                target->getHostileRefManager().threatAssist(pCaster, float(gain) * 0.5f * sSpellMgr.GetSpellThreatMultiplier(spellProto), spellProto);
-            break;
-        }
-        case SPELL_AURA_OBS_MOD_MANA:
-        {
-            // don't energize target if not alive, possible death persistent effects
-            if (!target->isAlive())
-                return;
-
             Powers powerType = ( (m_modifier.m_miscvalue > POWER_RUNIC_POWER || m_modifier.m_miscvalue < 0) ? POWER_MANA : Powers(m_modifier.m_miscvalue));
 
             // ignore non positive values (can be result apply spellmods to aura damage
             uint32 amount = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
 
-            uint32 pdamage = uint32(target->GetMaxPower(powerType) * amount / 100);
+            uint32 pdamage;
+            if( m_modifier.m_auraname == SPELL_AURA_OBS_MOD_ENERGY )
+                pdamage = uint32(target->GetMaxPower(powerType) * amount/100);
+            else
+                pdamage = amount;
 
             DETAIL_FILTER_LOG(LOG_FILTER_PERIODIC_AFFECTS, "PeriodicTick: %s energize %s for %u power %u inflicted by %u",
                 GetCasterGuid().GetString().c_str(), target->GetGuidStr().c_str(), pdamage, powerType, GetId());
-
-            if(target->GetMaxPower(powerType) == 0)
-                break;
 
             SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
             target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = target->ModifyPower(powerType, pdamage);
-
             if(Unit* pCaster = GetCaster())
                 target->getHostileRefManager().threatAssist(pCaster, float(gain) * 0.5f * sSpellMgr.GetSpellThreatMultiplier(spellProto), spellProto);
             break;
@@ -7678,6 +7665,18 @@ void Aura::PeriodicTick()
             uint32 gain = uint32(-target->ModifyPower(powerType, -pdamage));
 
             gain = uint32(gain * spellProto->EffectMultipleValue[GetEffIndex()]);
+
+            // Burn - SWP Brutallus
+            if (spellProto->Id == 46394)
+            {
+                uint32 ticks = GetAuraTicks();
+                uint32 threashold[] = {10,21,32,43,54};
+                for (uint8 i = 0; i<5; i++)
+                    if (ticks > threashold[i])
+                        pdamage *=2;
+                    else
+                        break;
+            }
 
             // maybe has to be sent different to client, but not by SMSG_PERIODICAURALOG
             SpellNonMeleeDamage damageInfo(pCaster, target, spellProto->Id, SpellSchoolMask(spellProto->SchoolMask));
@@ -9296,6 +9295,11 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                                      itr->getSource()->CastSpell(itr->getSource(), spellId1, true);
                         }
                     }
+                    break;
+                }
+                case 45661:                                 // Encapsulate
+                {
+                    spellId1 = 45665;
                     break;
                 }
                 default:
