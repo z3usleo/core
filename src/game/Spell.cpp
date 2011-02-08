@@ -342,15 +342,10 @@ Spell::Spell( Unit* caster, SpellEntry const *info, bool triggered, ObjectGuid o
 
     m_spellSchoolMask = GetSpellSchoolMask(info);           // Can be override for some spell (wand shoot for example)
 
-    if(m_attackType == RANGED_ATTACK)
-    {
-        // wand case
-        if((m_caster->getClassMask() & CLASSMASK_WAND_USERS) != 0 && m_caster->GetTypeId() == TYPEID_PLAYER)
-        {
-            if(Item* pItem = ((Player*)m_caster)->GetWeaponForAttack(RANGED_ATTACK))
-                m_spellSchoolMask = SpellSchoolMask(1 << pItem->GetProto()->Damage[0].DamageType);
-        }
-    }
+
+    if(IsSpellHaveEffect(m_spellInfo, SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL))
+        m_spellSchoolMask = m_caster->GetSchoolMaskForAttackType(m_attackType);
+
     // Set health leech amount to zero
     m_healthLeech = 0;
 
@@ -3608,24 +3603,22 @@ void Spell::_handle_finish_phase()
 
 void Spell::SendSpellCooldown()
 {
-    if(m_caster->GetTypeId() != TYPEID_PLAYER)
+    // Store cooldown only for Players or Creatures controlled by Players in any way.
+    if (!m_caster->isCharmedOwnedByPlayerOrPlayer())
         return;
 
-    Player* _player = (Player*)m_caster;
-
     // mana/health/etc potions, disabled by client (until combat out as declarate)
-    if (m_CastItem && m_CastItem->IsPotion())
+    if (m_CastItem && m_CastItem->IsPotion() && m_caster->GetTypeId() == TYPEID_PLAYER)
     {
         // need in some way provided data for Spell::finish SendCooldownEvent
-        _player->SetLastPotionId(m_CastItem->GetEntry());
+        ((Player*)m_caster)->SetLastPotionId(m_CastItem->GetEntry());
         return;
     }
 
     // (1) have infinity cooldown but set at aura apply, (2) passive cooldown at triggering
     if(m_spellInfo->Attributes & (SPELL_ATTR_DISABLED_WHILE_ACTIVE | SPELL_ATTR_PASSIVE))
         return;
-
-    _player->AddSpellAndCategoryCooldowns(m_spellInfo, m_CastItem ? m_CastItem->GetEntry() : 0, this);
+    m_caster->AddSpellAndCategoryCooldowns(m_spellInfo, m_CastItem ? m_CastItem->GetEntry() : 0, this);
 }
 
 void Spell::update(uint32 difftime)
