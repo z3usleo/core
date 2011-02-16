@@ -491,6 +491,11 @@
       <Filter>vmaps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\game\MapUpdater.cpp">
+	</ClCompile>
+    <ClCompile Include="..\..\src\game\PathFinder.cpp">
+      <Filter>Motion generators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\MoveMap.cpp">
       <Filter>World/Handlers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -900,6 +905,13 @@
     </ClInclude>
     <ClInclude Include="..\..\src\game\AuctionHouseBot.h">
       <Filter>Object</Filter>
+    <ClInclude Include="..\..\src\game\PathFinder.h">
+      <Filter>Motion generators</Filter>
+    <ClInclude Include="..\..\src\game\MoveMap.h">
+      <Filter>World/Handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\MoveMapSharedDefines.h">
+      <Filter>World/Handlers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\game\vmap\BIH.h">
       <Filter>vmaps</Filter>
