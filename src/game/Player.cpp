@@ -22942,6 +22942,11 @@ void Player::ActivateSpec(uint8 specNum)
     else if (Pet* pet = GetPet())
         pet->Unsummon(PET_SAVE_NOT_IN_SLOT, this);
 
+    ClearComboPointHolders();
+    ClearAllReactives();
+    UnsummonAllTotems();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+    RemoveArenaAuras();
     SendActionButtons(2);
 
     // prevent deletion of action buttons by client at spell unlearn or by player while spec change in progress
