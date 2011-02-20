@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9,00"
 	Name="QoS"
 	ProjectGUID="{AC7E1C9A-FECA-1BAD-7781-8A636757A7A3}"
 	RootNamespace="QoS"
 	Keyword="Win32Proj"
-	SignManifests="true"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -25,7 +25,6 @@
 			IntermediateDirectory="Debug\QoS_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -83,11 +82,16 @@
 				AdditionalLibraryDirectories=".;..\..\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_QoSd.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -99,6 +103,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -108,7 +115,6 @@
 			IntermediateDirectory="Release\QoS_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -165,11 +171,16 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_QoS.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -181,6 +192,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -190,7 +204,6 @@
 			IntermediateDirectory="Debug\QoS_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -274,7 +287,6 @@
 			IntermediateDirectory="Release\QoS_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -357,140 +369,166 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;cxx;cc;c;C">
+			Filter="cpp;cxx;cc;c;C"
+			>
 			<File
-				RelativePath="QoS_Decorator.cpp">
+				RelativePath="QoS_Decorator.cpp"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Manager.cpp">
+				RelativePath="QoS_Manager.cpp"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Session_Factory.cpp">
+				RelativePath="QoS_Session_Factory.cpp"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Session_Impl.cpp">
+				RelativePath="QoS_Session_Impl.cpp"
+				>
 			</File>
 			<File
-				RelativePath="SOCK_Dgram_Mcast_QoS.cpp">
+				RelativePath="SOCK_Dgram_Mcast_QoS.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hh">
+			Filter="h;hpp;hxx;hh"
+			>
 			<File
-				RelativePath="ACE_QoS_Export.h">
+				RelativePath="ACE_QoS_Export.h"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Decorator.h">
+				RelativePath="QoS_Decorator.h"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Manager.h">
+				RelativePath="QoS_Manager.h"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Session.h">
+				RelativePath="QoS_Session.h"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Session_Factory.h">
+				RelativePath="QoS_Session_Factory.h"
+				>
 			</File>
 			<File
-				RelativePath="QoS_Session_Impl.h">
+				RelativePath="QoS_Session_Impl.h"
+				>
 			</File>
 			<File
-				RelativePath="SOCK_Dgram_Mcast_QoS.h">
+				RelativePath="SOCK_Dgram_Mcast_QoS.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Build Files"
-			Filter="mpc;mpb;mwc">
+			Filter="mpc;mpb;mwc"
+			>
 			<File
-				RelativePath="qos.mpc">
+				RelativePath="qos.mpc"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 			</File>
 		</Filter>
 		<Filter
 			Name="Pkgconfig Files"
-			Filter="pcin">
+			Filter="pcin"
+			>
 			<File
-				RelativePath="ACE_QoS.pc.in">
+				RelativePath="ACE_QoS.pc.in"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 			</File>
 		</Filter>
 		<Filter
 			Name="Inline Files"
-			Filter="i;ipp;inl">
+			Filter="i;ipp;inl"
+			>
 			<File
-				RelativePath="QoS_Session_Impl.inl">
+				RelativePath="QoS_Session_Impl.inl"
+				>
 			</File>
 			<File
-				RelativePath="SOCK_Dgram_Mcast_QoS.inl">
+				RelativePath="SOCK_Dgram_Mcast_QoS.inl"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Documentation"
-			Filter="">
+			>
 			<File
-				RelativePath="README">
+				RelativePath="README"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
+					ExcludedFromBuild="true"
+					>
 					<Tool
-						Name="VCCustomBuildTool"/>
+						Name="VCCustomBuildTool"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="TRUE">
+					ExcludedFromBuild="true"
+					>
 					<Tool
-						Name="VCCustomBuildTool"/>
+						Name="VCCustomBuildTool"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
-					ExcludedFromBuild="TRUE">
+					ExcludedFromBuild="TRUE"
+					>
 					<Tool
-						Name="VCCustomBuildTool"/>
+						Name="VCCustomBuildTool"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|x64"
-					ExcludedFromBuild="TRUE">
+					ExcludedFromBuild="TRUE"
+					>
 					<Tool
-						Name="VCCustomBuildTool"/>
+						Name="VCCustomBuildTool"
+					/>
 				</FileConfiguration>
 			</File>
 		</Filter>
