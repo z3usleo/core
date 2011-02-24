@@ -46,6 +46,7 @@
 #include "GridNotifiersImpl.h"
 #include "Vehicle.h"
 #include "CellImpl.h"
+#include "PossessedSummon.h"
 
 #define NULL_AURA_SLOT 0xFF
 
@@ -6007,6 +6008,15 @@ void Aura::HandleAuraModIncreaseHealth(bool apply, bool Real)
             }
             return;
         }
+        case 30421:                                         // Nether Portal - Perseverence
+        {
+            if (apply)
+                m_modifier.m_amount += 30000;
+            float pct = float(target->GetHealth())/target->GetMaxHealth();
+            target->HandleStatModifier(UNIT_MOD_HEALTH, TOTAL_VALUE, float(m_modifier.m_amount), apply);
+            target->SetHealth(uint32(pct*target->GetMaxHealth()));
+            return;
+        }
     }
 
     // generic case
@@ -8997,10 +9007,10 @@ void SpellAuraHolder::_RemoveSpellAuraHolder()
         }
 
         // reset cooldown state for spells
-        if ( GetSpellProto()->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE )
+        if (caster && GetSpellProto()->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE )
         {
             // always send for players
-            if(caster && caster->GetTypeId() == TYPEID_PLAYER)
+            if (caster->GetTypeId() == TYPEID_PLAYER)
             {
                 // note: item based cooldowns and cooldown spell mods with charges ignored (unknown existing cases)
                 ((Player*)caster)->SendCooldownEvent(GetSpellProto());
@@ -9224,6 +9234,30 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
         {
             switch(GetId())
             {
+                case 30421:                                 // Nether Portal - Perseverance
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;
+                    spellId1 = 38637;                       // Nether Exhaustion
+                    break;
+                }
+                case 30422:                                 // Nether Portal - Serenity
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;                  // Nether Exhaustion
+                    spellId1 = 38638;
+                    break;
+                }
+                case 30423:                                 // Nether Portal  - Dominance
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;
+                    spellId1 = 38639;                       // Nether Exhaustion
+                    break;
+                }
                 case 50720:                                 // Vigilance (warrior spell but not have warrior family)
                 {
                     spellId1 = 68066;                       // Damage Reduction
@@ -9990,6 +10024,47 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
     }
 
     SetInUse(false);
+}
+
+void SpellAuraHolder::HandleBoundUnit(bool apply)
+{
+    if (m_boundUnitGuid.IsEmpty())
+        return;
+
+    if (apply)
+        return;
+
+    // Some spell effects have aura-like character (duration) and are always bound
+    // to an aura. Handle those special effects here.
+    for (uint32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        switch (SpellEffects(GetSpellProto()->Effect[i]))
+        {
+            case SPELL_EFFECT_SUMMON:
+            {
+                // possesed summons need to be unsummoned if aura is cancelled
+                uint32 prop_id = GetSpellProto()->EffectMiscValueB[i];
+                SummonPropertiesEntry const *summon_prop = sSummonPropertiesStore.LookupEntry(prop_id);
+                if(!summon_prop || summon_prop->Group != SUMMON_PROP_GROUP_CONTROLLABLE)
+                    return;
+
+                Unit* boundUnit = m_target->GetMap()->GetUnit(m_boundUnitGuid);
+
+                if (!boundUnit)
+                    return;
+                MANGOS_ASSERT((boundUnit->GetTypeId() == TYPEID_UNIT && ((Creature*)boundUnit)->isPossessedSummmon()));
+                ((PossessedSummon*)boundUnit)->UnSummon();
+                return;
+            }
+            case SPELL_EFFECT_REDIRECT_THREAT:
+            {
+                // TODO: implement :-P
+                return;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 SpellAuraHolder::~SpellAuraHolder()

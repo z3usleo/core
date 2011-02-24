@@ -16,41 +16,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MANGOS_PETAI_H
-#define MANGOS_PETAI_H
+#ifndef MANGOSSERVER_POSSESSEDSUMMON_H
+#define MANGOSSERVER_POSSESSEDSUMMON_H
 
-#include "CreatureAI.h"
-#include "Timer.h"
+#include "TemporarySummon.h"
 
-class Creature;
-class Spell;
-
-class MANGOS_DLL_SPEC PetAI : public CreatureAI
+class PossessedSummon : public Creature
 {
     public:
-
-        explicit PetAI(Creature *c);
-        ~PetAI();
-
-        void MoveInLineOfSight(Unit *);
-        void AttackStart(Unit *);
-        void EnterEvadeMode();
-        void AttackedBy(Unit*);
-        bool IsVisible(Unit *) const;
-
-        void UpdateAI(const uint32);
-        static int Permissible(const Creature *);
-
+        explicit PossessedSummon();
+        virtual ~PossessedSummon(){};
+        void Update(uint32 update_diff, uint32 diff);
+        void Summon(Player* owner, uint32 spellId);
+        void MANGOS_DLL_SPEC UnSummon();
+        void SaveToDB();
     private:
-        bool _isVisible(Unit *) const;
-        bool _needToStop(void) const;
-        void _stopAttack(void);
-
-        void UpdateAllies();
-
-        TimeTracker i_tracker;
-        bool inCombat;
-        std::set<uint64> m_AllySet;
-        uint32 m_updateAlliesTimer;
+        ObjectGuid m_oldCharm;
 };
 #endif
