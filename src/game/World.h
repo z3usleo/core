@@ -83,7 +83,8 @@ enum WorldTimers
     WUPDATE_EVENTS      = 6,
     WUPDATE_DELETECHARS = 7,
     WUPDATE_AUTOBROADCAST = 8,
-    WUPDATE_COUNT       = 9
+    WUPDATE_EXT_MAIL    = 9,
+    WUPDATE_COUNT       = 10
 };
 
 /// Configuration elements
@@ -196,6 +197,8 @@ enum eConfigUInt32Values
     CONFIG_UINT32_RAF_MAXGRANTLEVEL,
     CONFIG_UINT32_RAF_MAXREFERALS,
     CONFIG_UINT32_RAF_MAXREFERERS,
+    CONFIG_UINT32_EXTERNAL_MAIL,
+    CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL,
     CONFIG_UINT32_VALUE_COUNT
 };
 
@@ -594,9 +597,6 @@ class World
         void UpdateRealmCharCount(uint32 accid);
 
         LocaleConstant GetAvailableDbcLocale(LocaleConstant locale) const { if(m_availableDbcLocaleMask & (1 << locale)) return locale; else return m_defaultDbcLocale; }
-
-        // Semaphore for serialize spells update in mtmaps env
-        ACE_Thread_Mutex m_spellUpdateLock;
 
         //used World DB version
         void LoadDBVersion();

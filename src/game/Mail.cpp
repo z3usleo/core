@@ -1098,3 +1098,57 @@ void MailDraft::SendMailTo(MailReceiver const& receiver, MailSender const& sende
         deleteIncludedItems();
 }
 /*! @} */
+
+void WorldSession::SendExternalMails()
+{
+    QueryResult *result = CharacterDatabase.Query("SELECT id,sender,receiver,subject,message,money,stationery FROM mail_external WHERE sent='0'");
+    if (!result)
+    {
+        delete result;
+        return;
+    }
+    else
+    {
+        do
+        {
+            Field *fields = result->Fetch();
+            uint32 id = fields[0].GetUInt32();
+            ObjectGuid senderGuid = ObjectGuid(fields[1].GetUInt64());
+            ObjectGuid receiverGuid = ObjectGuid(fields[2].GetUInt64());
+            std::string subject = fields[3].GetString();
+            std::string message = fields[4].GetString();
+            uint32 money = fields[5].GetUInt32();
+
+            if (Player* Receiver = sObjectMgr.GetPlayer(receiverGuid))
+            {
+                message = !message.empty() ? message : "Support Message";
+                MailDraft draft(subject, message);
+
+                QueryResult *result2 = CharacterDatabase.PQuery("SELECT item,count FROM mail_external_items WHERE mail_id='%u'", id);
+                if (result2)
+                {
+                    do
+                    {
+                        Field *itemfields = result2->Fetch();
+                        uint32 ItemID = itemfields[0].GetUInt32();
+                        uint32 ItemCount = itemfields[1].GetUInt32();
+                        Item* ToMailItem = ItemID ? Item::CreateItem(ItemID, ItemCount, Receiver) : NULL;
+                        if (ToMailItem)
+                        {
+                            ToMailItem->SaveToDB();
+                            draft.AddItem(ToMailItem);
+                        }
+                    }while(result2->NextRow());
+                }
+                delete result2;
+
+                if (money)
+					draft.SetMoney(money);
+
+				draft.SendMailTo(MailReceiver(Receiver), MailSender(MAIL_NORMAL, senderGuid.GetCounter(), MAIL_STATIONERY_DEFAULT), MAIL_CHECK_MASK_RETURNED);
+				CharacterDatabase.PExecute("UPDATE mail_external SET sent='1' WHERE id='%u'", id);
+			}
+		}while(result->NextRow());
+	}
+	delete result;
+}
