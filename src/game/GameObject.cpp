@@ -1430,6 +1430,9 @@ void GameObject::Use(Unit* user)
 
             spellId = info->spellcaster.spellId;
 
+			if (user && user->IsMounted())
+				user->Unmount();
+
             AddUse();
             break;
         }
