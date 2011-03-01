@@ -104,7 +104,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
 		static Creature* GetCreatureInWorld(ObjectGuid guid);
 
         // Player access
-        static Player* FindPlayer(ObjectGuid guid);         // if need player at specific map better use Map::GetPlayer
+        MANGOS_DLL_SPEC static Player* FindPlayer(ObjectGuid guid);         // if need player at specific map better use Map::GetPlayer
         static Player* FindPlayerByName(const char *name);
         static void KickPlayer(ObjectGuid guid);
 
