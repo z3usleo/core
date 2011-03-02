@@ -1932,6 +1932,16 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     if (spellInfo_1->SpellIconID == 2834 && spellInfo_2->SpellIconID == 2834)
                         return false;
 
+                    // Death's Choice Heroic & Normal versions
+                    if( (spellInfo_1->Id == 67702 && spellInfo_2->Id == 67771) ||
+                        (spellInfo_2->Id == 67702 && spellInfo_1->Id == 67771) )
+                        return false;
+
+                    // Solace of the Defeated Heroic & Normal versions
+                    if( (spellInfo_1->Id == 67696 && spellInfo_2->Id == 67750) ||
+                        (spellInfo_2->Id == 67696 && spellInfo_1->Id == 67750) )
+                        return false;
+
                     break;
                 }
                 case SPELLFAMILY_MAGE:
@@ -2313,6 +2323,14 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                 // *Seal of Command and Band of Eternal Champion (multi-family check)
                 if( spellInfo_1->SpellIconID==561 && spellInfo_1->SpellVisual[0]==7992 && spellId_2 == 35081)
+                    return false;
+
+                // Holy Vengeance and Righteous Vengeance
+                if ((spellInfo_2->Id == 61840 && spellInfo_1->Id == 31803) || (spellInfo_1->Id == 61840 && spellInfo_2->Id == 31803))
+                    return false;
+
+                // Blood Corruption and Righteous Vengeance
+                if ((spellInfo_2->Id == 61840 && spellInfo_1->Id == 53742) || (spellInfo_1->Id == 61840 && spellInfo_2->Id == 53742))
                     return false;
             }
 
