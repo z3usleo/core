@@ -15259,6 +15259,11 @@ void Player::TalkedToCreature( uint32 entry, ObjectGuid guid )
         {
             if (qInfo->HasSpecialFlag(QuestSpecialFlags(QUEST_SPECIAL_FLAG_KILL_OR_CAST | QUEST_SPECIAL_FLAG_SPEAKTO)))
             {
+                // HACK FIX: Quest 14151 is completeable by talking 5 times to 28701
+                // but it shouldn't give a Kill Credit in this case
+                if (qInfo->GetQuestId() == 14151)
+                    return;
+
                 for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
                 {
                                                             // skip spell casts and Gameobject objectives
