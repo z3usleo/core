@@ -1248,14 +1248,18 @@ void ObjectMgr::LoadCreatureModelRace()
 void ObjectMgr::LoadCreatures()
 {
     uint32 count = 0;
-    //                                                0              1   2    3
-    QueryResult *result = WorldDatabase.Query("SELECT creature.guid, id, map, modelid,"
+    //                                                0                       1   2    3
+    QueryResult *result = WorldDatabase.Query("SELECT creature.guid, creature.id, map, modelid,"
     //   4             5           6           7           8            9              10         11
         "equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint,"
-    //   12         13       14          15            16         17         18     19
-        "curhealth, curmana, DeathState, MovementType, spawnMask, phaseMask, event, pool_entry "
-        "FROM creature LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
-        "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
+    //   12         13       14          15            16         17         18
+        "curhealth, curmana, DeathState, MovementType, spawnMask, phaseMask, event,"
+    //   19                        20
+        "pool_creature.pool_entry, pool_creature_template.pool_entry "
+        "FROM creature "
+        "LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
+        "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid "
+        "LEFT OUTER JOIN pool_creature_template ON creature.id = pool_creature_template.id");
 
     if(!result)
     {
@@ -1321,7 +1325,8 @@ void ObjectMgr::LoadCreatures()
         data.spawnMask          = fields[16].GetUInt8();
         data.phaseMask          = fields[17].GetUInt16();
         int16 gameEvent         = fields[18].GetInt16();
-        int16 PoolId            = fields[19].GetInt16();
+        int16 GuidPoolId        = fields[19].GetInt16();
+        int16 EntryPoolId       = fields[20].GetInt16();
 
         MapEntry const* mapEntry = sMapStore.LookupEntry(data.mapid);
         if(!mapEntry)
@@ -1415,7 +1420,7 @@ void ObjectMgr::LoadCreatures()
             data.phaseMask = 1;
         }
 
-        if (gameEvent==0 && PoolId==0)                      // if not this is to be managed by GameEvent System or Pool system
+        if (gameEvent==0 && GuidPoolId==0 && EntryPoolId==0)// if not this is to be managed by GameEvent System or Pool system
             AddCreatureToGrid(guid, &data);
 
         ++count;
@@ -1514,16 +1519,122 @@ void ObjectMgr::LoadVehicleAccessories()
     sLog.outString(">> Loaded %u Vehicle Accessories", count);
 }
 
+uint32 ObjectMgr::AddGOData(uint32 entry, uint32 mapId, float x, float y, float z, float o, uint32 spawntimedelay, float rotation0, float rotation1, float rotation2, float rotation3)
+{
+    GameObjectInfo const* goinfo = GetGameObjectInfo(entry);
+    if (!goinfo)
+        return 0;
+
+    Map * map = const_cast<Map*>(sMapMgr.FindMap(mapId));
+    if(!map)
+        return 0;
+
+    uint32 guid = map->GenerateLocalLowGuid(HIGHGUID_GAMEOBJECT);
+    GameObjectData& data = NewGOData(guid);
+    data.id             = entry;
+    data.mapid          = mapId;
+    data.posX           = x;
+    data.posY           = y;
+    data.posZ           = z;
+    data.orientation    = o;
+    data.rotation0      = rotation0;
+    data.rotation1      = rotation1;
+    data.rotation2      = rotation2;
+    data.rotation3      = rotation3;
+    data.spawntimesecs  = spawntimedelay;
+    data.animprogress   = 100;
+    data.spawnMask      = 1;
+    data.go_state       = GO_STATE_READY;
+    data.phaseMask      = PHASEMASK_NORMAL;
+    data.artKit         = goinfo->type == GAMEOBJECT_TYPE_CAPTURE_POINT ? 21 : 0;
+    data.dbData = false;
+
+    AddGameobjectToGrid(guid, &data);
+
+    // Spawn if necessary (loaded grids only)
+    // We use spawn coords to spawn
+    if(!map->Instanceable() && map->IsLoaded(x, y))
+    {
+        GameObject *go = new GameObject;
+        if (!go->LoadFromDB(guid, map))
+        {
+            sLog.outError("AddGOData: cannot add gameobject entry %u to map", entry);
+            delete go;
+            return 0;
+        }
+        map->Add(go);
+    }
+
+    sLog.outDebug("AddGOData: dbguid %u entry %u map %u x %f y %f z %f o %f", guid, entry, mapId, x, y, z, o);
+
+    return guid;
+}
+
+uint32 ObjectMgr::AddCreData(uint32 entry, uint32 team, uint32 mapId, float x, float y, float z, float o, uint32 spawntimedelay)
+{
+    CreatureInfo const *cInfo = GetCreatureTemplate(entry);
+    if(!cInfo)
+        return 0;
+
+	Map * map = const_cast<Map*>(sMapMgr.FindMap(mapId));
+	if(!map)
+        return 0;
+
+	uint32 level = cInfo->minlevel == cInfo->maxlevel ? cInfo->minlevel : urand(cInfo->minlevel, cInfo->maxlevel); // Only used for extracting creature base stats
+
+    uint32 guid = map->GenerateLocalLowGuid(HIGHGUID_UNIT);
+    CreatureData& data = NewOrExistCreatureData(guid);
+    data.id = entry;
+    data.mapid = mapId;
+    data.modelid_override = 0;
+    data.equipmentId = cInfo->equipmentId;
+    data.posX = x;
+    data.posY = y;
+    data.posZ = z;
+    data.orientation = o;
+    data.spawntimesecs = spawntimedelay;
+    data.spawndist = 0;
+    data.currentwaypoint = 0;
+    data.curhealth = 1;
+    data.curmana = 1;
+    data.is_dead = false;
+    data.movementType = cInfo->MovementType;
+    data.spawnMask = 1;
+    data.phaseMask = PHASEMASK_NORMAL;
+    data.dbData = false;
+
+    AddCreatureToGrid(guid, &data);
+
+    // We use spawn coords to spawn
+    if(!map->Instanceable() && !map->IsRemovalGrid(x, y))
+    {
+        Creature* creature = new Creature;
+        if(!creature->LoadFromDB(guid, map))
+        {
+            sLog.outError("AddCreature: cannot add creature entry %u to map", entry);
+            delete creature;
+            return 0;
+        }
+        map->Add(creature);
+    }
+
+    return guid;
+}
+
 void ObjectMgr::LoadGameobjects()
 {
     uint32 count = 0;
 
-    //                                                0                1   2    3           4           5           6
-    QueryResult *result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation,"
-    //   7          8          9          10         11             12            13     14         15         16     17
-        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, event, pool_entry "
-        "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
-        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
+    //                                                0                           1   2    3           4           5           6
+    QueryResult *result = WorldDatabase.Query("SELECT gameobject.guid, gameobject.id, map, position_x, position_y, position_z, orientation,"
+    //   7          8          9          10         11             12            13     14         15         16
+        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, event,"
+    //   17                          18
+        "pool_gameobject.pool_entry, pool_gameobject_template.pool_entry "
+        "FROM gameobject "
+        "LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
+        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid "
+        "LEFT OUTER JOIN pool_gameobject_template ON gameobject.id = pool_gameobject_template.id");
 
     if(!result)
     {
@@ -1622,7 +1733,8 @@ void ObjectMgr::LoadGameobjects()
         data.spawnMask      = fields[14].GetUInt8();
         data.phaseMask      = fields[15].GetUInt16();
         int16 gameEvent     = fields[16].GetInt16();
-        int16 PoolId        = fields[17].GetInt16();
+        int16 GuidPoolId    = fields[17].GetInt16();
+        int16 EntryPoolId   = fields[18].GetInt16();
 
         if (data.rotation2 < -1.0f || data.rotation2 > 1.0f)
         {
@@ -1648,7 +1760,7 @@ void ObjectMgr::LoadGameobjects()
             data.phaseMask = 1;
         }
 
-        if (gameEvent == 0 && PoolId == 0)                  // if not this is to be managed by GameEvent System or Pool system
+        if (gameEvent==0 && GuidPoolId==0 && EntryPoolId==0)// if not this is to be managed by GameEvent System or Pool system
             AddGameobjectToGrid(guid, &data);
         ++count;
 
@@ -5645,10 +5757,57 @@ bool ObjectMgr::AddGraveYardLink(uint32 id, uint32 zoneId, Team team, bool inDB)
     if(inDB)
     {
         WorldDatabase.PExecuteLog("INSERT INTO game_graveyard_zone ( id,ghost_zone,faction) "
-            "VALUES ('%u', '%u','%u')", id, zoneId, uint32(team));
+            "VALUES ('%u', '%u','%u')", id, zoneId, team);
     }
 
     return true;
+}
+
+void ObjectMgr::RemoveGraveYardLink(uint32 id, uint32 zoneId, Team team, bool inDB)
+{
+    GraveYardMap::iterator graveLow  = mGraveYardMap.lower_bound(zoneId);
+    GraveYardMap::iterator graveUp   = mGraveYardMap.upper_bound(zoneId);
+    if(graveLow==graveUp)
+    {
+        //sLog.outErrorDb("Table `game_graveyard_zone` incomplete: Zone %u Team %u does not have a linked graveyard.",zoneId,team);
+        return;
+    }
+
+    bool found = false;
+
+    GraveYardMap::iterator itr;
+
+    for (itr = graveLow; itr != graveUp; ++itr)
+    {
+        GraveYardData & data = itr->second;
+
+        // skip not matching safezone id
+        if(data.safeLocId != id)
+            continue;
+
+        // skip enemy faction graveyard at same map (normal area, city, or battleground)
+        // team == 0 case can be at call from .neargrave
+        if(data.team != 0 && team != 0 && data.team != team)
+            continue;
+
+        found = true;
+        break;
+    }
+
+    // no match, return
+    if(!found)
+        return;
+
+    // remove from links
+    mGraveYardMap.erase(itr);
+
+    // remove link from DB
+    if(inDB)
+    {
+        WorldDatabase.PExecute("DELETE FROM game_graveyard_zone WHERE id = '%u' AND ghost_zone = '%u' AND faction = '%u'", id, zoneId, team);
+    }
+
+    return;
 }
 
 void ObjectMgr::LoadAreaTriggerTeleports()
@@ -5928,7 +6087,7 @@ void ObjectMgr::SetHighestGuids()
     result = WorldDatabase.Query("SELECT MAX(guid) FROM gameobject" );
     if( result )
     {
-        m_CreatureFirstGuid = (*result)[0].GetUInt32()+1;
+        m_GameObjectFirstGuid = (*result)[0].GetUInt32()+1;
         delete result;
     }
 
@@ -9177,7 +9336,7 @@ bool FindCreatureData::operator()( CreatureDataPair const& dataPair )
 
     // skip not spawned (in any state),
     uint16 pool_id = sPoolMgr.IsPartOfAPool<Creature>(dataPair.first);
-    if (pool_id && !sPoolMgr.IsSpawnedObject<Creature>(dataPair.first))
+    if (pool_id && !i_player->GetMap()->GetPersistentState()->IsSpawnedPoolObject<Creature>(dataPair.first))
         return false;
 
     if (!i_spawnedData || new_dist < i_spawnedDist)
@@ -9227,7 +9386,7 @@ bool FindGOData::operator()( GameObjectDataPair const& dataPair )
 
     // skip not spawned (in any state)
     uint16 pool_id = sPoolMgr.IsPartOfAPool<GameObject>(dataPair.first);
-    if (pool_id && !sPoolMgr.IsSpawnedObject<GameObject>(dataPair.first))
+    if (pool_id && !i_player->GetMap()->GetPersistentState()->IsSpawnedPoolObject<GameObject>(dataPair.first))
         return false;
 
     if (!i_spawnedData || new_dist < i_spawnedDist)

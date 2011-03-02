@@ -331,6 +331,9 @@ class MANGOS_DLL_SPEC WorldSession
         void SendPetitionShowList(ObjectGuid guid);
         void SendSaveGuildEmblem( uint32 msg );
 
+        // External mail
+        static void SendExternalMails();
+
         // Looking For Group
         // TRUE values set by client sending CMSG_LFG_SET_AUTOJOIN and CMSG_LFM_CLEAR_AUTOFILL before player login
         bool LookingForGroup_auto_join;

@@ -52,6 +52,8 @@
 #include "BattleGround.h"
 #include "BattleGroundAV.h"
 #include "BattleGroundMgr.h"
+#include "OutdoorPvP.h"
+#include "OutdoorPvPMgr.h"
 #include "ArenaTeam.h"
 #include "Chat.h"
 #include "Database/DatabaseImpl.h"
@@ -749,8 +751,8 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
     InitRunes();
 
     SetUInt32Value (PLAYER_FIELD_COINAGE, sWorld.getConfig(CONFIG_UINT32_START_PLAYER_MONEY));
-    SetUInt32Value (PLAYER_FIELD_HONOR_CURRENCY, sWorld.getConfig(CONFIG_UINT32_START_HONOR_POINTS));
-    SetUInt32Value (PLAYER_FIELD_ARENA_CURRENCY, sWorld.getConfig(CONFIG_UINT32_START_ARENA_POINTS));
+    SetHonorPoints(sWorld.getConfig(CONFIG_UINT32_START_HONOR_POINTS));
+    SetArenaPoints(sWorld.getConfig(CONFIG_UINT32_START_ARENA_POINTS));
 
     // Played time
     m_Last_tick = time(NULL);
@@ -1539,6 +1541,9 @@ void Player::SetDeathState(DeathState s)
         //FIXME: is pet dismissed at dying or releasing spirit? if second, add SetDeathState(DEAD) to HandleRepopRequestOpcode and define pet unsummon here with (s == DEAD)
             RemovePet(PET_SAVE_REAGENTS);
         }
+
+		// update outdoor pvp zone
+        sOutdoorPvPMgr.HandlePlayerLeaveZone(this, m_zoneUpdateId);
 
         // save value before aura remove in Unit::SetDeathState
         ressSpellId = GetUInt32Value(PLAYER_SELF_RES_SPELL);
@@ -4646,6 +4651,7 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
     uint32 newzone, newarea;
     GetZoneAndAreaId(newzone,newarea);
     UpdateZone(newzone,newarea);
+	sOutdoorPvPMgr.HandlePlayerResurrects(this, newzone);
 
     // update visibility of world around viewpoint
     m_camera.UpdateVisibilityForOwner();
@@ -6856,30 +6862,40 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
     return true;
 }
 
-void Player::ModifyHonorPoints( int32 value )
+void Player::SetHonorPoints(uint32 value)
 {
-    if(value < 0)
-    {
-        if (GetHonorPoints() > sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS))
-            SetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY, sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS) + value);
-        else
-            SetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY, GetHonorPoints() > uint32(-value) ? GetHonorPoints() + value : 0);
-    }
-    else
-        SetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY, GetHonorPoints() < sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS) - value ? GetHonorPoints() + value : sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS));
+    if (value > sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS))
+        value = sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS);
+
+    SetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY, value);
 }
 
-void Player::ModifyArenaPoints( int32 value )
+void Player::SetArenaPoints(uint32 value)
 {
-    if(value < 0)
-    {
-        if (GetArenaPoints() > sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS))
-            SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS) + value);
-        else
-            SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, GetArenaPoints() > uint32(-value) ? GetArenaPoints() + value : 0);
-    }
-    else
-        SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, GetArenaPoints() < sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS) - value ? GetArenaPoints() + value : sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS));
+    if (value > sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS))
+        value = sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS);
+
+    SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, value);
+}
+
+void Player::ModifyHonorPoints(int32 value)
+{
+    int32 newValue = (int32)GetHonorPoints() + value;
+
+    if (newValue < 0)
+        newValue = 0;
+
+    SetHonorPoints(newValue);
+}
+
+void Player::ModifyArenaPoints(int32 value)
+{
+    int32 newValue = (int32)GetArenaPoints() + value;
+
+    if (newValue < 0)
+        newValue = 0;
+
+    SetArenaPoints(newValue);
 }
 
 uint32 Player::GetGuildIdFromDB(ObjectGuid guid)
@@ -7009,6 +7025,8 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
 
     if(m_zoneUpdateId != newZone)
     {
+        sOutdoorPvPMgr.HandlePlayerLeaveZone(this, m_zoneUpdateId);
+        sOutdoorPvPMgr.HandlePlayerEnterZone(this, newZone);
         SendInitWorldStates(newZone, newArea);              // only if really enters to new zone, not just area change, works strange...
 
         if (sWorld.getConfig(CONFIG_BOOL_WEATHER))
@@ -7130,6 +7148,16 @@ void Player::CheckDuelDistance(time_t currTime)
             DuelComplete(DUEL_FLED);
         }
     }
+}
+
+OutdoorPvP * Player::GetOutdoorPvP() const
+{
+    return sOutdoorPvPMgr.GetOutdoorPvPToZoneId(GetZoneId());
+}
+
+bool Player::IsOutdoorPvPActive()
+{
+    return isAlive() && !HasInvisibilityAura() && !HasStealthAura() && (IsPvP() || sWorld.IsPvPRealm())  && !HasMovementFlag(MOVEFLAG_FLYING) && !IsTaxiFlying();
 }
 
 void Player::DuelComplete(DuelCompleteType type)
@@ -7754,6 +7782,46 @@ void Player::UpdateEquipSpellsAtFormChange()
     }
 }
 
+/// handles unique effect of Deadly Poison: apply poison of the other weapon when already at max. stack
+void Player::_HandleDeadlyPoison(Unit* Target, WeaponAttackType attType, SpellEntry const *spellInfo)
+{
+    SpellAuraHolder const* dPoison = NULL;
+    SpellAuraHolderConstBounds holders = Target->GetSpellAuraHolderBounds(spellInfo->Id);
+    for (SpellAuraHolderMap::const_iterator iter = holders.first; iter != holders.second; ++iter)
+    {
+        if (iter->second->GetCaster() == this)
+        {
+            dPoison = iter->second;
+            break;
+        }
+    }
+    if (dPoison && dPoison->GetStackAmount() == spellInfo->StackAmount)
+    {
+        Item *otherWeapon = GetWeaponForAttack(attType == BASE_ATTACK ? OFF_ATTACK : BASE_ATTACK );
+        if (!otherWeapon)
+            return;
+
+        // all poison enchantments are temporary
+        uint32 enchant_id = otherWeapon->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT);
+        if (!enchant_id)
+            return;
+
+        SpellItemEnchantmentEntry const* pSecondEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
+        if (!pSecondEnchant)
+            return;
+
+        for (int s = 0; s < 3; ++s)
+        {
+            if (pSecondEnchant->type[s] != ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
+                continue;
+
+            SpellEntry const* combatEntry = sSpellStore.LookupEntry(pSecondEnchant->spellid[s]);
+            if (combatEntry && combatEntry->Dispel == DISPEL_POISON)
+                CastSpell(Target, combatEntry, true, otherWeapon);
+        }
+    }
+}
+
 void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
 {
     Item *item = GetWeaponForAttack(attType, true, false);
@@ -7840,7 +7908,13 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
                 if(IsPositiveSpell(pEnchant->spellid[s]))
                     CastSpell(this, pEnchant->spellid[s], true, item);
                 else
+                {
+                    // Deadly Poison, unique effect needs to be handled before casting triggered spell
+                    if (spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && spellInfo->SpellFamilyFlags & UI64LIT(0x10000))
+                        _HandleDeadlyPoison(Target, attType, spellInfo);
+
                     CastSpell(Target, pEnchant->spellid[s], true, item);
+                }
             }
         }
     }
@@ -8698,6 +8772,43 @@ static WorldStatePair EY_world_states[] =
     { 0x0,   0x0 }
 };
 
+static WorldStatePair EP_world_states[] =
+{
+    { 0x97a, 0x0 },     // 10 2426
+    { 0x917, 0x0 },     // 11 2327
+    { 0x918, 0x0 },     // 12 2328
+    { 0x97b, 0x32 },     // 13 2427
+    { 0x97c, 0x32 },     // 14 2428
+    { 0x933, 0x1 },     // 15 2355
+    { 0x946, 0x0 },     // 16 2374
+    { 0x947, 0x0 },     // 17 2375
+    { 0x948, 0x0 },     // 18 2376
+    { 0x949, 0x0 },     // 19 2377
+    { 0x94a, 0x0 },     // 20 2378
+    { 0x94b, 0x0 },     // 21 2379
+    { 0x932, 0x0 },     // 22 2354
+    { 0x934, 0x0 },     // 23 2356
+    { 0x935, 0x0 },     // 24 2357
+    { 0x936, 0x0 },     // 25 2358
+    { 0x937, 0x0 },     // 26 2359
+    { 0x938, 0x0 },     // 27 2360
+    { 0x939, 0x1 },     // 28 2361
+    { 0x930, 0x1 },     // 29 2352
+    { 0x93a, 0x0 },     // 30 2362
+    { 0x93b, 0x0 },     // 31 2363
+    { 0x93c, 0x0 },     // 32 2364
+    { 0x93d, 0x0 },     // 33 2365
+    { 0x944, 0x0 },     // 34 2372
+    { 0x945, 0x0 },     // 35 2373
+    { 0x931, 0x1 },     // 36 2353
+    { 0x93e, 0x0 },     // 37 2366
+    { 0x931, 0x1 },     // 38 2367 ??  grey horde not in dbc! send for consistency's sake, and to match field count
+    { 0x940, 0x0 },     // 39 2368
+    { 0x941, 0x0 },     // 7 2369
+    { 0x942, 0x0 },     // 8 2370
+    { 0x943, 0x0 }      // 9 2371
+};
+
 static WorldStatePair HP_world_states[] =                   // Hellfire Peninsula
 {
     { 0x9ba, 0x1 },                                         // 2490 10
@@ -8716,67 +8827,111 @@ static WorldStatePair HP_world_states[] =                   // Hellfire Peninsul
     { 0x0,   0x0 }
 };
 
+static WorldStatePair SI_world_states[] =                   // Hellfire Peninsula
+{
+                     // states are always shown
+    { 2313, 0x0 },   // 7 ally silityst gathered
+    { 2314, 0x0 },   // 8 horde silityst gathered
+    { 2317, 0x0 }   // 9 max silithyst
+};
+
+static WorldStatePair NA_world_states[] =
+{
+    { 2503, 0x0 },  // 10
+    { 2502, 0x0 },  // 11
+    { 2493, 0x0 },  // 12
+    { 2491, 0x0 },  // 13
+
+    { 2495, 0x0 },  // 14
+    { 2494, 0x0 },  // 15
+    { 2497, 0x0 },  // 16
+
+    { 2762, 0x0 },  // 17
+    { 2662, 0x0 },  // 18
+    { 2663, 0x0 },  // 19
+    { 2664, 0x0 },  // 20
+
+    { 2760, 0x0 },  // 21
+    { 2670, 0x0 },  // 22
+    { 2668, 0x0 },  // 23
+    { 2669, 0x0 },  // 24
+
+    { 2761, 0x0 },  // 25
+    { 2667, 0x0 },  // 26
+    { 2665, 0x0 },  // 27
+    { 2666, 0x0 },  // 28
+
+    { 2763, 0x0 },  // 29
+    { 2659, 0x0 },  // 30
+    { 2660, 0x0 },  // 31
+    { 2661, 0x0 },  // 32
+
+    { 2671, 0x0 },  // 33
+    { 2676, 0x0 },  // 34
+    { 2677, 0x0 },  // 35
+    { 2672, 0x0 },  // 36
+    { 2673, 0x0 }  // 37
+};
+
 static WorldStatePair TF_world_states[] =                   // Terokkar Forest
 {
-    { 0xa41, 0x0 },                                         // 2625 10
-    { 0xa40, 0x14 },                                        // 2624 11
-    { 0xa3f, 0x0 },                                         // 2623 12
-    { 0xa3e, 0x0 },                                         // 2622 13
-    { 0xa3d, 0x5 },                                         // 2621 14
-    { 0xa3c, 0x0 },                                         // 2620 15
-    { 0xa87, 0x0 },                                         // 2695 16
-    { 0xa86, 0x0 },                                         // 2694 17
-    { 0xa85, 0x0 },                                         // 2693 18
-    { 0xa84, 0x0 },                                         // 2692 19
-    { 0xa83, 0x0 },                                         // 2691 20
-    { 0xa82, 0x0 },                                         // 2690 21
-    { 0xa81, 0x0 },                                         // 2689 22
-    { 0xa80, 0x0 },                                         // 2688 23
-    { 0xa7e, 0x0 },                                         // 2686 24
-    { 0xa7d, 0x0 },                                         // 2685 25
-    { 0xa7c, 0x0 },                                         // 2684 26
-    { 0xa7b, 0x0 },                                         // 2683 27
-    { 0xa7a, 0x0 },                                         // 2682 28
-    { 0xa79, 0x0 },                                         // 2681 29
-    { 0x9d0, 0x5 },                                         // 2512 30
-    { 0x9ce, 0x0 },                                         // 2510 31
-    { 0x9cd, 0x0 },                                         // 2509 32
-    { 0x9cc, 0x0 },                                         // 2508 33
-    { 0xa88, 0x0 },                                         // 2696 34
-    { 0xad0, 0x0 },                                         // 2768 35
-    { 0xacf, 0x1 },                                         // 2767 36
-    { 0x0,   0x0 }
+    { 0xa41, 0x0 },                // 10 // 2625 capture bar pos
+    { 0xa40, 0x14 },               // 11 // 2624 capture bar neutral
+    { 0xa3f, 0x0 },                // 12 // 2623 show capture bar
+    { 0xa3e, 0x0 },                // 13 // 2622 horde towers controlled
+    { 0xa3d, 0x5 },                // 14 // 2621 ally towers controlled
+    { 0xa3c, 0x0 },                // 15 // 2620 show towers controlled
+    { 0xa88, 0x0 },                // 16 // 2696 SE Neu
+    { 0xa87, 0x0 },                // 17 // SE Horde
+    { 0xa86, 0x0 },                // 18 // SE Ally
+    { 0xa85, 0x0 },                // 19 //S Neu
+    { 0xa84, 0x0 },                // 20 S Horde
+    { 0xa83, 0x0 },                // 21 S Ally
+    { 0xa82, 0x0 },                // 22 NE Neu
+    { 0xa81, 0x0 },                // 23 NE Horde
+    { 0xa80, 0x0 },                // 24 NE Ally
+    { 0xa7e, 0x0 },                // 25 // 2686 N Neu
+    { 0xa7d, 0x0 },                // 26 N Horde
+    { 0xa7c, 0x0 },                // 27 N Ally
+    { 0xa7b, 0x0 },                // 28 NW Ally
+    { 0xa7a, 0x0 },                // 29 NW Horde
+    { 0xa79, 0x0 },                // 30 NW Neutral
+    { 0x9d0, 0x5 },                // 31 // 2512 locked time remaining seconds first digit
+    { 0x9ce, 0x0 },                // 32 // 2510 locked time remaining seconds second digit
+    { 0x9cd, 0x0 },                // 33 // 2509 locked time remaining minutes
+    { 0x9cc, 0x0 },                // 34 // 2508 neutral locked time show
+    { 0xad0, 0x0 },                // 35 // 2768 horde locked time show
+    { 0xacf, 0x1 }                // 36 // 2767 ally locked time show
 };
 
 static WorldStatePair ZM_world_states[] =                   // Zangarmarsh
 {
-    { 0x9e1, 0x0 },                                         // 2529 10
-    { 0x9e0, 0x0 },                                         // 2528 11
-    { 0x9df, 0x0 },                                         // 2527 12
-    { 0xa5d, 0x1 },                                         // 2526 13
-    { 0xa5c, 0x0 },                                         // 2525 14
-    { 0xa5b, 0x1 },                                         // 2524 15
-    { 0xa5a, 0x0 },                                         // 2523 16
-    { 0xa59, 0x1 },                                         // 2649 17
-    { 0xa58, 0x0 },                                         // 2648 18
-    { 0xa57, 0x0 },                                         // 2647 19
-    { 0xa56, 0x0 },                                         // 2646 20
-    { 0xa55, 0x1 },                                         // 2645 21
-    { 0xa54, 0x0 },                                         // 2644 22
-    { 0x9e7, 0x0 },                                         // 2535 23
-    { 0x9e6, 0x0 },                                         // 2534 24
-    { 0x9e5, 0x0 },                                         // 2533 25
-    { 0xa00, 0x0 },                                         // 2560 26
-    { 0x9ff, 0x1 },                                         // 2559 27
-    { 0x9fe, 0x0 },                                         // 2558 28
-    { 0x9fd, 0x0 },                                         // 2557 29
-    { 0x9fc, 0x1 },                                         // 2556 30
-    { 0x9fb, 0x0 },                                         // 2555 31
-    { 0xa62, 0x0 },                                         // 2658 32
-    { 0xa61, 0x1 },                                         // 2657 33
-    { 0xa60, 0x1 },                                         // 2656 34
-    { 0xa5f, 0x0 },                                         // 2655 35
-    { 0x0,   0x0 }
+    { 0x9e1, 0x0 },           // 10 //2529
+    { 0x9e0, 0x0 },           // 11
+    { 0x9df, 0x0 },           // 12
+    { 0xa5d, 0x1 },           // 13 //2653
+    { 0xa5c, 0x0 },           // 14 //2652 east beacon neutral
+    { 0xa5b, 0x1 },           // 15 horde
+    { 0xa5a, 0x0 },           // 16 ally
+    { 0xa59, 0x1 },           // 17 // 2649 Twin spire graveyard horde  12???
+    { 0xa58, 0x0 },           // 18 ally     14 ???
+    { 0xa57, 0x0 },           // 19 neutral  7???
+    { 0xa56, 0x0 },           // 20 // 2646 west beacon neutral
+    { 0xa55, 0x1 },           // 21 horde
+    { 0xa54, 0x0 },           // 22 ally
+    { 0x9e7, 0x0 },           // 23 // 2535
+    { 0x9e6, 0x0 },           // 24
+    { 0x9e5, 0x0 },           // 25
+    { 0xa00, 0x0 },           // 26 // 2560
+    { 0x9ff, 0x1 },           // 27
+    { 0x9fe, 0x0 },           // 28
+    { 0x9fd, 0x0 },           // 29
+    { 0x9fc, 0x1 },           // 30
+    { 0x9fb, 0x0 },           // 31
+    { 0xa62, 0x0 },           // 32 // 2658
+    { 0xa61, 0x1 },           // 33
+    { 0xa60, 0x1 },           // 34
+    { 0xa5f, 0x0 }           // 35
 };
 
 void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
@@ -8784,6 +8939,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
     // data depends on zoneid/mapid...
     BattleGround* bg = GetBattleGround();
     uint32 mapid = GetMapId();
+	OutdoorPvP * pvp = sOutdoorPvPMgr.GetOutdoorPvPToZoneId(zoneid);
 
     DEBUG_LOG("Sending SMSG_INIT_WORLD_STATES to Map:%u, Zone: %u", mapid, zoneid);
 
@@ -8822,6 +8978,26 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
         case 38:
         case 40:
         case 51:
+        case 139: // EPL
+            if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_EP)
+                pvp->FillInitialWorldStates(data, count);
+            else
+                FillInitialWorldState(data,count, EP_world_states);
+            break;
+        case 1377:                                          // Silithus
+            {
+                if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_SI)
+                    pvp->FillInitialWorldStates(data, count);
+                else
+                {
+                    FillInitialWorldState(data,count, SI_world_states);
+                }
+                FillInitialWorldState(data,count,2322, 0x0 ); // 10 sandworm N
+                FillInitialWorldState(data,count,2323, 0x0 ); // 11 sandworm S
+                FillInitialWorldState(data,count,2324, 0x0 ); // 12 sandworm SW
+                FillInitialWorldState(data,count,2325, 0x0 ); // 13 sandworm E
+            }
+            break;
         case 1519:
         case 1537:
         case 2257:
@@ -8851,13 +9027,20 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 FillInitialWorldState(data,count, EY_world_states);
             break;
         case 3483:                                          // Hellfire Peninsula
-            FillInitialWorldState(data,count, HP_world_states);
+            if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_HP)
+                FillInitialWorldState(data,count, HP_world_states);
             break;
         case 3519:                                          // Terokkar Forest
-            FillInitialWorldState(data,count, TF_world_states);
+            if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_TF)
+                FillInitialWorldState(data,count, TF_world_states);
             break;
         case 3521:                                          // Zangarmarsh
-            FillInitialWorldState(data,count, ZM_world_states);
+            if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_ZM)
+                FillInitialWorldState(data,count, ZM_world_states);
+            break;
+        case 3518:                                          // Haala
+            if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_NA)
+                FillInitialWorldState(data,count, NA_world_states);
             break;
         case 3698:                                          // Nagrand Arena
             if (bg && bg->GetTypeID(true) == BATTLEGROUND_NA)
@@ -13360,6 +13543,10 @@ void Player::PrepareGossipMenu(WorldObject *pSource, uint32 menuId)
                 case GOSSIP_OPTION_TABARDDESIGNER:
                 case GOSSIP_OPTION_AUCTIONEER:
                     break;                                  // no checks
+                case GOSSIP_OPTION_OUTDOORPVP:
+                    if (!sOutdoorPvPMgr.CanTalkTo(this, pCreature, itr->second))
+                        hasMenuItem = false;
+                    break;
                 default:
                     sLog.outErrorDb("Creature entry %u have unknown gossip option %u for menu %u", pCreature->GetEntry(), itr->second.option_id, itr->second.menu_id);
                     hasMenuItem = false;
@@ -13537,6 +13724,9 @@ void Player::OnGossipSelect(WorldObject* pSource, uint32 gossipListId, uint32 me
 
             break;
         }
+        case GOSSIP_OPTION_OUTDOORPVP:
+            sOutdoorPvPMgr.HandleGossipOption(this, pSource->GetGUID(), gossipListId);
+            break;
         case GOSSIP_OPTION_SPIRITHEALER:
             if (isDead())
                 ((Creature*)pSource)->CastSpell(((Creature*)pSource),17251,true,NULL,NULL,GetGUID());
@@ -13606,10 +13796,10 @@ void Player::OnGossipSelect(WorldObject* pSource, uint32 gossipListId, uint32 me
 
 uint32 Player::GetGossipTextId(WorldObject *pSource)
 {
-    if (!pSource || pSource->GetTypeId() != TYPEID_UNIT || !((Creature*)pSource)->GetDBTableGUIDLow())
+    if (!pSource || pSource->GetTypeId() != TYPEID_UNIT)
         return DEFAULT_GOSSIP_MESSAGE;
 
-    if (uint32 pos = sObjectMgr.GetNpcGossip(((Creature*)pSource)->GetDBTableGUIDLow()))
+    if (uint32 pos = sObjectMgr.GetNpcGossip(((Creature*)pSource)->GetGUIDLow()))
         return pos;
 
     return DEFAULT_GOSSIP_MESSAGE;
@@ -15506,7 +15696,7 @@ bool Player::MinimalLoadFromDB(uint64 lowguid)
 
     Field *fields = result->Fetch();
 
-    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, lowguid));
+    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, uint32(lowguid)));
 
     sLog.outDebug("Player #%d minimal data loaded",lowguid);
 
@@ -15809,11 +15999,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
 
     _LoadArenaTeamInfo(holder->GetResult(PLAYER_LOGIN_QUERY_LOADARENAINFO));
 
-    uint32 arena_currency = fields[39].GetUInt32();
-    if (arena_currency > sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS))
-        arena_currency = sWorld.getConfig(CONFIG_UINT32_MAX_ARENA_POINTS);
-
-    SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, arena_currency);
+    SetArenaPoints(fields[39].GetUInt32());
 
     // check arena teams integrity
     for(uint32 arena_slot = 0; arena_slot < MAX_ARENA_SLOT; ++arena_slot)
@@ -15831,10 +16017,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
             SetArenaTeamInfoField(arena_slot, ArenaTeamInfoType(j), 0);
     }
 
-    uint32 honor_currency = fields[40].GetUInt32();
-    if (honor_currency > sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS))
-        honor_currency = sWorld.getConfig(CONFIG_UINT32_MAX_HONOR_POINTS);
-    SetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY, honor_currency);
+    SetHonorPoints(fields[40].GetUInt32());
 
     SetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION, fields[41].GetUInt32());
     SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, fields[42].GetUInt32());
@@ -21088,6 +21271,14 @@ void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
             continue;
         }
 
+        // Remove spells triggered by equipped item auras
+        if (pItem->HasTriggeredByAuraSpell(spellInfo))
+        {
+            RemoveAurasDueToSpell(holder->GetId());
+            itr = auras.begin();
+            continue;
+        }
+
         // skip if not item dependent or have alternative item
         if(HasItemFitToSpellReqirements(spellInfo,pItem))
         {
@@ -21721,7 +21912,7 @@ bool Player::isTotalImmune()
     return false;
 }
 
-bool Player::HasTitle(uint32 bitIndex)
+bool Player::HasTitle(uint32 bitIndex) const
 {
     if (bitIndex > MAX_TITLE_INDEX)
         return false;
@@ -21881,16 +22072,10 @@ void Player::AutoStoreLoot(Loot& loot, bool broadcast, uint8 bag, uint8 slot)
 
 uint32 Player::CalculateTalentsPoints() const
 {
-    uint32 base_talent = getLevel() < 10 ? 0 : getLevel()-9;
+    uint32 base_level = getClass() == CLASS_DEATH_KNIGHT ? 55 : 9;
+    uint32 base_talent = getLevel() <= base_level ? 0 : getLevel() - base_level;
 
-    if(getClass() != CLASS_DEATH_KNIGHT)
-        return uint32(base_talent * sWorld.getConfig(CONFIG_FLOAT_RATE_TALENT));
-
-    uint32 talentPointsForLevel = getLevel() < 56 ? 0 : getLevel() - 55;
-    talentPointsForLevel += m_questRewardTalentCount;
-
-    if(talentPointsForLevel > base_talent)
-        talentPointsForLevel = base_talent;
+    uint32 talentPointsForLevel = base_talent + m_questRewardTalentCount;
 
     return uint32(talentPointsForLevel * sWorld.getConfig(CONFIG_FLOAT_RATE_TALENT));
 }
@@ -23230,7 +23415,7 @@ void Player::ChangeGrantableLevels(uint8 increase)
 {
     if (increase)
     {
-        if (m_GrantableLevelsCount <= uint32(sWorld.getConfig(CONFIG_UINT32_RAF_MAXGRANTLEVEL) * sWorld.getConfig(CONFIG_FLOAT_RATE_RAF_LEVELPERLEVEL)))
+        if (m_GrantableLevelsCount <= int32(uint32(sWorld.getConfig(CONFIG_UINT32_RAF_MAXGRANTLEVEL) * sWorld.getConfig(CONFIG_FLOAT_RATE_RAF_LEVELPERLEVEL))))
             m_GrantableLevelsCount += increase;
     }
     else

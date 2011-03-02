@@ -850,10 +850,10 @@ bool Item::IsFitToSpellRequirements(SpellEntry const* spellInfo) const
     ItemPrototype const* proto = GetProto();
 
     // Enchant spells only use Effect[0] (patch 3.3.2)
-    if(proto->IsVellum() && spellInfo->Effect[EFFECT_INDEX_0] == SPELL_EFFECT_ENCHANT_ITEM)
+    if (proto->IsVellum() && spellInfo->Effect[EFFECT_INDEX_0] == SPELL_EFFECT_ENCHANT_ITEM)
     {
         // EffectItemType[0] is the associated scroll itemID, if a scroll can be made
-        if(spellInfo->EffectItemType[EFFECT_INDEX_0] == 0)
+        if (spellInfo->EffectItemType[EFFECT_INDEX_0] == 0)
             return false;
         // Other checks do not apply to vellum enchants, so return final result
         return ((proto->SubClass == ITEM_SUBCLASS_WEAPON_ENCHANTMENT && spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON) ||
@@ -1308,5 +1308,38 @@ bool Item::CheckSoulboundTradeExpire()
         return true; // remove from tradeable list
     }
 
+    return false;
+}
+
+bool Item::HasTriggeredByAuraSpell(SpellEntry const* spellInfo) const
+{
+    if (!spellInfo)
+        return false;
+
+    ItemPrototype const* proto = GetProto();
+    if (!proto)
+        return false;
+
+    for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; i++)
+    {
+        _Spell const& spellData = proto->Spells[i];
+
+        // no spell
+        if(!spellData.SpellId)
+            continue;
+
+        // wrong triggering type
+        if(spellData.SpellTrigger != ITEM_SPELLTRIGGER_ON_EQUIP)
+            continue;
+
+        // check if it is valid spell
+        SpellEntry const* spellproto = sSpellStore.LookupEntry(spellData.SpellId);
+        if(!spellproto)
+            continue;
+
+        for (int j = 0; j < MAX_EFFECT_INDEX; j++)
+            if (spellproto->EffectTriggerSpell[j] == spellInfo->Id)
+                return true;
+    }
     return false;
 }

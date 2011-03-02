@@ -508,7 +508,7 @@ void Pet::Update(uint32 update_diff, uint32 diff)
                 return;
             }
 
-            if (isControlled() && !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()))
+            if ((!IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()) && !owner->GetCharmGuid().IsEmpty()) || (isControlled() && owner->GetPetGuid().IsEmpty()))
             {
                 DEBUG_LOG("Pet %d lost control, removed. Owner = %d, distance = %d, pet GUID = ", GetGUID(),owner->GetGUID(), GetDistance2d(owner), owner->GetPetGuid().GetCounter());
                 Unsummon(PET_SAVE_REAGENTS);
@@ -652,12 +652,6 @@ void Pet::Unsummon(PetSaveMode mode, Unit* owner /*= NULL*/)
 
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(GetCreateSpellID());
 
-            // Special way for remove cooldown if SPELL_ATTR_DISABLED_WHILE_ACTIVE
-            if (spellInfo && spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
-            {
-                p_owner->SendCooldownEvent(spellInfo);
-            }
-
             if (mode == PET_SAVE_REAGENTS)
             {
                 //returning of reagents only for players, so best done here
@@ -687,6 +681,11 @@ void Pet::Unsummon(PetSaveMode mode, Unit* owner /*= NULL*/)
 
                 if (p_owner->GetGroup())
                     p_owner->SetGroupUpdateFlag(GROUP_UPDATE_PET);
+
+                // Special way for remove cooldown if SPELL_ATTR_DISABLED_WHILE_ACTIVE
+                if (spellInfo && spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
+                    if (p_owner->GetTemporaryUnsummonedPetNumber() != GetCharmInfo()->GetPetNumber())
+                        p_owner->SendCooldownEvent(spellInfo);
             }
         }
 
@@ -1821,9 +1820,9 @@ uint8 Pet::GetMaxTalentPointsForLevel(uint32 level)
     return points;
 }
 
-void Pet::ToggleAutocast(uint32 spellid, bool apply)
+void Pet::ToggleAutocast(uint32 spellid, bool apply, bool force)
 {
-    if(IsPassiveSpell(spellid) || !isControlled())
+    if(IsPassiveSpell(spellid) || (!isControlled() && !force))
         return;
 
     PetSpellMap::iterator itr = m_spells.find(spellid);
@@ -1919,7 +1918,6 @@ bool Pet::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint3
 
     Object::_Create(ObjectGuid(HIGHGUID_PET, pet_number, guidlow));
 
-    m_DBTableGuid = guidlow;
     m_originalEntry = Entry;
 
     if(!InitEntry(Entry))
@@ -2091,16 +2089,20 @@ bool Pet::SetSummonPosition(float x, float y, float z)
         SetPetFollowAngle(M_PI_F*1.25f);
 
 
-    if (x == 0.0f && y == 0.0f && z == 0.0f)
+    if ( x == 0.0f && y == 0.0f )
         owner->GetClosePoint(x, y, z, GetObjectBoundingRadius()*4, PET_FOLLOW_DIST, GetPetFollowAngle());
 
     GetRandomPoint(x, y, z, GetObjectBoundingRadius()*4, px, py, pz);
 
+    UpdateAllowedPositionZ(px, py, pz);
+
     Relocate(px, py, pz, -owner->GetOrientation());
     SetSummonPoint(px, py, pz, -owner->GetOrientation());
 
-    if (!IsPositionValid()) return false;
-        else return true;
+    if (!IsPositionValid()) 
+        return false;
+    else
+        return true;
 }
 
 void Pet::ApplyStatScalingBonus(Stats stat, bool apply)
@@ -2933,7 +2935,7 @@ Unit* Pet::GetOwner() const
     Unit* owner = Unit::GetOwner();
 
     if (!owner)
-        if (!GetOwnerGuid().IsEmpty())
+        if (!GetOwnerGuid().IsEmpty() && GetOwnerGuid().IsAnyTypeCreature())
             if (Map* pMap = GetMap())
                 owner = pMap->GetAnyTypeCreature(GetOwnerGuid());
 
@@ -2943,8 +2945,8 @@ Unit* Pet::GetOwner() const
 
     if (owner)
         return owner;
-
-    return NULL;
+    else
+        return NULL;
 }
 
 
@@ -3055,35 +3057,70 @@ PetScalingData* Pet::CalculateScalingData(bool recalculate)
     if (!pScalingDataList || pScalingDataList->empty())                            // Zero values...
         return m_PetScalingData;
 
-    for (PetScalingDataList::const_iterator itr = pScalingDataList->begin(); itr != pScalingDataList->end(); ++itr)
+    bool baseCoefficientsDone = false;
+    for (PetScalingDataList::const_iterator itr = pScalingDataList->begin(); itr != pScalingDataList->end(); )
     {
          const PetScalingData* pData = &*itr;
 
          if (!pData->creatureID || (owner && (!pData->requiredAura || owner->HasSpell(pData->requiredAura) || owner->HasAura(pData->requiredAura) || HasSpell(pData->requiredAura) || HasAura(pData->requiredAura))))
          {
-             m_PetScalingData->healthBasepoint  += pData->healthBasepoint;
-             m_PetScalingData->healthScale      += pData->healthScale;
-             m_PetScalingData->powerBasepoint   += pData->powerBasepoint;
-             m_PetScalingData->powerScale       += pData->powerScale;
-             m_PetScalingData->APBasepoint      += pData->APBasepoint;
-             m_PetScalingData->APBaseScale      += pData->APBaseScale;
-             m_PetScalingData->attackpowerScale += pData->attackpowerScale;
-             m_PetScalingData->damageScale      += pData->damageScale;
-             m_PetScalingData->spelldamageScale += pData->spelldamageScale;
-             m_PetScalingData->spellHitScale    += pData->spellHitScale;
-             m_PetScalingData->meleeHitScale    += pData->meleeHitScale;
-             m_PetScalingData->expertizeScale   += pData->expertizeScale;
-             m_PetScalingData->attackspeedScale += pData->attackspeedScale;
-             m_PetScalingData->critScale        += pData->critScale;
-             m_PetScalingData->powerregenScale  += pData->powerregenScale;
-             for (int i = 0; i < MAX_STATS; i++)
+             // the basic coefficients
+             if (!baseCoefficientsDone && !pData->requiredAura)
              {
-                  m_PetScalingData->statScale[i] += pData->statScale[i];
+                 m_PetScalingData->healthBasepoint  += pData->healthBasepoint;
+                 m_PetScalingData->healthScale      += pData->healthScale;
+                 m_PetScalingData->powerBasepoint   += pData->powerBasepoint;
+                 m_PetScalingData->powerScale       += pData->powerScale;
+                 m_PetScalingData->APBasepoint      += pData->APBasepoint;
+                 m_PetScalingData->APBaseScale      += pData->APBaseScale;
+                 m_PetScalingData->attackpowerScale += pData->attackpowerScale;
+                 m_PetScalingData->damageScale      += pData->damageScale;
+                 m_PetScalingData->spelldamageScale += pData->spelldamageScale;
+                 m_PetScalingData->spellHitScale    += pData->spellHitScale;
+                 m_PetScalingData->meleeHitScale    += pData->meleeHitScale;
+                 m_PetScalingData->expertizeScale   += pData->expertizeScale;
+                 m_PetScalingData->attackspeedScale += pData->attackspeedScale;
+                 m_PetScalingData->critScale        += pData->critScale;
+                 m_PetScalingData->powerregenScale  += pData->powerregenScale;
+                 for (int i = 0; i < MAX_STATS; i++)
+                 {
+                      m_PetScalingData->statScale[i] += pData->statScale[i];
+                 }
+                 for (int i = 0; i < MAX_SPELL_SCHOOL; i++)
+                 {
+                      m_PetScalingData->resistanceScale[i] += pData->resistanceScale[i];
+                 }
              }
-             for (int i = 0; i < MAX_SPELL_SCHOOL; i++)
+             // bonus coefficients by special auras
+             if (baseCoefficientsDone && pData->requiredAura)
              {
-                  m_PetScalingData->resistanceScale[i] += pData->resistanceScale[i];
+                 m_PetScalingData->attackpowerScale *= float(pData->attackpowerScale + 100)/100;
+                 m_PetScalingData->damageScale      *= float(pData->damageScale + 100)/100;
+                 m_PetScalingData->spelldamageScale *= float(pData->spelldamageScale + 100)/100;
+                 m_PetScalingData->spellHitScale    *= float(pData->spellHitScale + 100)/100;
+                 m_PetScalingData->meleeHitScale    *= float(pData->meleeHitScale + 100)/100;
+                 m_PetScalingData->expertizeScale   *= float(pData->expertizeScale + 100)/100;
+                 m_PetScalingData->attackspeedScale *= float(pData->attackspeedScale + 100)/100;
+                 m_PetScalingData->critScale        *= float(pData->critScale + 100)/100;
+                 m_PetScalingData->powerregenScale  *= float(pData->powerregenScale + 100)/100;
+                 for (int i = 0; i < MAX_STATS; i++)
+                 {
+                      m_PetScalingData->statScale[i] *= float(pData->statScale[i] + 100)/100;
+                 }
+                 for (int i = 0; i < MAX_SPELL_SCHOOL; i++)
+                 {
+                      m_PetScalingData->resistanceScale[i] *= float(pData->resistanceScale[i] + 100)/100;
+                 }
              }
+         }
+
+         ++itr;
+
+         // second loop for the bonus coefficients
+         if (itr ==  pScalingDataList->end() && !baseCoefficientsDone)
+         {
+            itr = pScalingDataList->begin();
+            baseCoefficientsDone = true;
          }
     }
     return m_PetScalingData;
@@ -3167,7 +3204,7 @@ void Pet::Regenerate(Powers power, uint32 diff)
 
     if (curValue < 0)
         curValue = 0;
-    else if (curValue > maxValue)
+    else if (curValue > int32(maxValue))
         curValue = maxValue;
 
     SetPower(power, curValue);

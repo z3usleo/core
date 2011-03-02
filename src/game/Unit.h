@@ -412,6 +412,8 @@ enum UnitState
     UNIT_STAT_FLEEING_MOVE    = 0x00040000,
     UNIT_STAT_ON_VEHICLE      = 0x00080000,                     // Unit is on vehicle
 
+    UNIT_STAT_IGNORE_PATHFINDING    = 0x00080000,               // do not use pathfinding in any MovementGenerator
+
     // masks (only for check)
 
     // can't move currently
@@ -592,7 +594,8 @@ enum NPCFlags
     UNIT_NPC_FLAG_GUILD_BANKER          = 0x00800000,       // cause client to send 997 opcode
     UNIT_NPC_FLAG_SPELLCLICK            = 0x01000000,       // cause client to send 1015 opcode (spell click), dynamic, set at loading and don't must be set in DB
     UNIT_NPC_FLAG_PLAYER_VEHICLE        = 0x02000000,       // players with mounts that have vehicle data should have it set
-    UNIT_NPC_FLAG_GUARD                 = 0x10000000        // custom flag for guards
+    UNIT_NPC_FLAG_GUARD                 = 0x10000000,       // custom flag for guards
+    UNIT_NPC_FLAG_OUTDOORPVP            = 0x20000000        // custom flag for outdoor pvp creatures
 };
 
 // used in most movement packets (send and received)
@@ -1485,6 +1488,10 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void MonsterMoveWithSpeed(float x, float y, float z, uint32 transitTime = 0);
         void MonsterJump(float x, float y, float z, float o, uint32 transitTime, uint32 verticalSpeed);
 
+        void MonsterMoveByPath(float x, float y, float z, uint32 speed, bool smoothPath = true);
+        template<typename PathElem, typename PathNode>
+        void MonsterMoveByPath(Path<PathElem,PathNode> const& path, uint32 start, uint32 end, uint32 transitTime = 0);
+
         // recommend use MonsterMove/MonsterMoveWithSpeed for most case that correctly work with movegens
         // if used additional args in ... part then floats must explicitly casted to double
         void SendMonsterMove(float x, float y, float z, SplineType type, SplineFlags flags, uint32 Time, Player* player = NULL, ...);
@@ -1495,7 +1502,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         virtual bool SetPosition(float x, float y, float z, float orientation, bool teleport = false);
 
         template<typename PathElem, typename PathNode>
-        void SendMonsterMoveByPath(Path<PathElem,PathNode> const& path, uint32 start, uint32 end, SplineFlags flags);
+        void SendMonsterMoveByPath(Path<PathElem,PathNode> const& path, uint32 start, uint32 end, SplineFlags flags, uint32 traveltime);
 
         void SendHighestThreatUpdate(HostileReference* pHostileReference);
         void SendThreatClear();
@@ -2033,6 +2040,11 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool CreateVehicleKit(uint32 vehicleId);
         void RemoveVehicleKit();
 
+        void ScheduleAINotify(uint32 delay);
+        bool IsAINotifyScheduled() const { return m_AINotifyScheduled;}
+        void _SetAINotifyScheduled(bool on) { m_AINotifyScheduled = on;}       // only for call from RelocationNotifyEvent code
+        void OnRelocated();
+
     protected:
         explicit Unit ();
 
@@ -2108,6 +2120,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_castCounter;                               // count casts chain of triggered spells for prevent infinity cast crashes
 
         UnitVisibility m_Visibility;
+        Position m_last_notified_position;
+        bool m_AINotifyScheduled;
 
         Diminishing m_Diminishing;
         // Manage all Units threatening us
@@ -2223,35 +2237,6 @@ bool Unit::CheckAllControlledUnits(Func const& func, uint32 controlledMask) cons
                 return true;
 
     return false;
-}
-
-template<typename Elem, typename Node>
-inline void Unit::SendMonsterMoveByPath(Path<Elem,Node> const& path, uint32 start, uint32 end, SplineFlags flags)
-{
-    uint32 traveltime = uint32(path.GetTotalLength(start, end) * 32);
-
-    uint32 pathSize = end - start;
-
-    WorldPacket data( SMSG_MONSTER_MOVE, (GetPackGUID().size()+1+4+4+4+4+1+4+4+4+pathSize*4*3) );
-    data << GetPackGUID();
-    data << uint8(0);
-    data << GetPositionX();
-    data << GetPositionY();
-    data << GetPositionZ();
-    data << uint32(WorldTimer::getMSTime());
-    data << uint8(SPLINETYPE_NORMAL);
-    data << uint32(flags);
-    data << uint32(traveltime);
-    data << uint32(pathSize);
-
-    for(uint32 i = start; i < end; ++i)
-    {
-        data << float(path[i].x);
-        data << float(path[i].y);
-        data << float(path[i].z);
-    }
-
-    SendMessageToSet(&data, true);
 }
 
 #endif

@@ -366,7 +366,31 @@ enum MangosStrings
     LANG_COMMAND_TICKETRESPONSE         = 373,
     LANG_COMMAND_TICKETCOUNT_CONSOLE    = 374,
     LANG_COMMAND_TICKETNOTEXIST_NAME    = 375,
-    // Room for more level 2              376-399 not used
+    LANG_POOL_ENTRY_LIST_CHAT           = 376,
+    LANG_NO_POOL_FOR_MAP                = 377,
+    LANG_POOL_LIST_NON_INSTANCE         = 378,
+    LANG_POOL_SPAWNS_NON_INSTANCE       = 379,
+    LANG_POOL_CHANCE_CREATURE_LIST_CHAT = 380,
+    LANG_POOL_CHANCE_CREATURE_LIST_CONSOLE = 381,
+    LANG_POOL_CREATURE_LIST_CHAT        = 382,
+    LANG_POOL_CREATURE_LIST_CONSOLE     = 383,
+    LANG_POOL_CHANCE_GO_LIST_CHAT       = 384,
+    LANG_POOL_CHANCE_GO_LIST_CONSOLE    = 385,
+    LANG_POOL_GO_LIST_CHAT              = 386,
+    LANG_POOL_GO_LIST_CONSOLE           = 387,
+    LANG_POOL_CHANCE_CREATURE_LIST_HEADER = 388,
+    LANG_POOL_CREATURE_LIST_HEADER      = 389,
+    LANG_POOL_CHANCE_GO_LIST_HEADER     = 390,
+    LANG_POOL_GO_LIST_HEADER            = 391,
+    LANG_POOL_INFO_HEADER_CHAT          = 392,
+    LANG_POOL_INFO_HEADER_CONSOLE       = 393,
+    LANG_POOL_INFO_HEADER               = 394,
+    LANG_NO_POOL                        = 395,
+    LANG_POOL_ENTRY_LIST_CONSOLE        = 396,
+    LANG_POOL_CHANCE_POOL_LIST_HEADER   = 397,
+    LANG_POOL_POOL_LIST_HEADER          = 398,
+    LANG_POOL_CHANCE_POOL_LIST_CHAT     = 399,
+    // End Level 2 list, continued at 1500
 
     // level 3 chat
     LANG_SCRIPTS_RELOADED_ANNOUNCE      = 400,
@@ -902,13 +926,86 @@ enum MangosStrings
     // Room for old clients 2.x           1300-1399 not used
     // Room for old clients 1.x           1400-1499 not used
 
-    // FREE IDS                           1500-9999
+    // Level 2 (continue)
+    LANG_POOL_CHANCE_POOL_LIST_CONSOLE  = 1500,
+    LANG_POOL_POOL_LIST_CHAT            = 1501,
+    LANG_POOL_POOL_LIST_CONSOLE         = 1502,
+    // Room for more Level 2              1503-1599 not used
+
+    // FREE IDS                           1600-9999
 
     // Broadcaster
     LANG_AUTO_BROADCAST                 = 1300,
 
     // Use for not-in-offcial-sources patches
     //                                    10000-10999
+    // opvp hp
+    LANG_OPVP_HP_CAPTURE_OVERLOOK_H     = 10001,
+    LANG_OPVP_HP_CAPTURE_OVERLOOK_A     = 10002,
+    LANG_OPVP_HP_CAPTURE_STADIUM_H      = 10003,
+    LANG_OPVP_HP_CAPTURE_STADIUM_A      = 10004,
+    LANG_OPVP_HP_CAPTURE_BROKENHILL_H   = 10005,
+    LANG_OPVP_HP_CAPTURE_BROKENHILL_A   = 10006,
+    LANG_OPVP_HP_LOOSE_OVERLOOK_H       = 10007,
+    LANG_OPVP_HP_LOOSE_OVERLOOK_A       = 10008,
+    LANG_OPVP_HP_LOOSE_STADIUM_H        = 10009,
+    LANG_OPVP_HP_LOOSE_STADIUM_A        = 10010,
+    LANG_OPVP_HP_LOOSE_BROKENHILL_H     = 10011,
+    LANG_OPVP_HP_LOOSE_BROKENHILL_A     = 10012,
+    // opvp zm
+    LANG_OPVP_ZM_CAPTURE_WEST_H         = 10013,
+    LANG_OPVP_ZM_CAPTURE_WEST_A         = 10014,
+    LANG_OPVP_ZM_CAPTURE_EAST_H         = 10015,
+    LANG_OPVP_ZM_CAPTURE_EAST_A         = 10016,
+    LANG_OPVP_ZM_CAPTURE_GY_H           = 10017,
+    LANG_OPVP_ZM_CAPTURE_GY_A           = 10018,
+    LANG_OPVP_ZM_LOOSE_WEST_H           = 10019,
+    LANG_OPVP_ZM_LOOSE_WEST_A           = 10020,
+    LANG_OPVP_ZM_LOOSE_EAST_H           = 10021,
+    LANG_OPVP_ZM_LOOSE_EAST_A           = 10022,
+    LANG_OPVP_ZM_LOOSE_GY_H             = 10023,
+    LANG_OPVP_ZM_LOOSE_GY_A             = 10024,
+    // opvp na
+    LANG_OPVP_NA_CAPTURE_H              = 10025,
+    LANG_OPVP_NA_CAPTURE_A              = 10026,
+    LANG_OPVP_NA_LOOSE_H                = 10027,
+    LANG_OPVP_NA_LOOSE_A                = 10028,
+    // opvp tf
+    LANG_OPVP_TF_CAPTURE_H              = 10029,
+    LANG_OPVP_TF_CAPTURE_A              = 10030,
+    LANG_OPVP_TF_LOOSE_H                = 10031,
+    LANG_OPVP_TF_LOOSE_A                = 10032,
+    // opvp ep
+    LANG_OPVP_EP_CAPTURE_NPT_H          = 10033,
+    LANG_OPVP_EP_CAPTURE_NPT_A          = 10034,
+    LANG_OPVP_EP_CAPTURE_EWT_H          = 10035,
+    LANG_OPVP_EP_CAPTURE_EWT_A          = 10036,
+    LANG_OPVP_EP_CAPTURE_CGT_H          = 10037,
+    LANG_OPVP_EP_CAPTURE_CGT_A          = 10038,
+    LANG_OPVP_EP_CAPTURE_PWT_H          = 10039,
+    LANG_OPVP_EP_CAPTURE_PWT_A          = 10040,
+    LANG_OPVP_EP_LOOSE_NPT_H            = 10041,
+    LANG_OPVP_EP_LOOSE_NPT_A            = 10042,
+    LANG_OPVP_EP_LOOSE_EWT_H            = 10043,
+    LANG_OPVP_EP_LOOSE_EWT_A            = 10044,
+    LANG_OPVP_EP_LOOSE_CGT_H            = 10045,
+    LANG_OPVP_EP_LOOSE_CGT_A            = 10046,
+    LANG_OPVP_EP_LOOSE_PWT_H            = 10047,
+    LANG_OPVP_EP_LOOSE_PWT_A            = 10048,
+    // opvp si
+    LANG_OPVP_SI_CAPTURE_H              = 10049,
+    LANG_OPVP_SI_CAPTURE_A              = 10050,
+    // opvp gh
+    LANG_OPVP_GH_CAPTURE_H              = 10051,
+    LANG_OPVP_GH_CAPTURE_A              = 10052,
+    LANG_OPVP_GH_LOOSE_H                = 10053,
+    LANG_OPVP_GH_LOOSE_A                = 10054,
+    // opvp gossips
+    LANG_OPVP_EP_FLIGHT_NPT             = 10056,
+    LANG_OPVP_EP_FLIGHT_EWT             = 10057,
+    LANG_OPVP_EP_FLIGHT_CGT             = 10058,
+    LANG_OPVP_ZM_GOSSIP_ALLIANCE        = 10059,
+    LANG_OPVP_ZM_GOSSIP_HORDE           = 10060,
 
     // Use for custom patches             11000-11999
     LANG_COMMAND_FRIEND                 = 11133,

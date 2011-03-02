@@ -46,12 +46,15 @@
 #include "BattleGround.h"
 #include "BattleGroundEY.h"
 #include "BattleGroundWS.h"
+#include "BattleGroundSA.h"
+#include "OutdoorPvPMgr.h"
 #include "Language.h"
 #include "SocialMgr.h"
 #include "VMapFactory.h"
 #include "Util.h"
 #include "TemporarySummon.h"
 #include "ScriptMgr.h"
+#include "PossessedSummon.h"
 #include "SkillDiscovery.h"
 #include "Formulas.h"
 #include "GridNotifiers.h"
@@ -748,21 +751,6 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         if (Player* modOwner = m_caster->GetSpellModOwner())
                             modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DAMAGE, damage);
                     }
-                }
-                // Gouge
-                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000008))
-                {
-                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.21f);
-                }
-                // Instant Poison
-                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002000))
-                {
-                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.10f);
-                }
-                // Wound Poison
-                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000010000000))
-                {
-                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.04f);
                 }
                 // Thrash (Raise ally ghoul spell)
                 else if (m_spellInfo->Id == 47480)
@@ -1585,6 +1573,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     return;
                 }
                 case 46167:                                 // Planning for the Future: Create Snowfall Glade Pup Cover
+                case 50918:                                 // Gluttonous Lurkers: Create Basilisk Crystals Cover
                 case 50926:                                 // Gluttonous Lurkers: Create Zul'Drak Rat Cover
                 case 51026:                                 // Create Drakkari Medallion Cover
                 case 51592:                                 // Pickup Primordial Hatchling
@@ -1601,6 +1590,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     switch(m_spellInfo->Id)
                     {
                         case 46167: spellId = 46773; break;
+                        case 50918: spellId = 50919; break;
                         case 50926: spellId = 50927; break;
                         case 51026: spellId = 50737; break;
                         case 51592: spellId = 51593; break;
@@ -2241,6 +2231,40 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->SetFacingTo(frand(0, M_PI_F*2), true);
                     return;
                 }
+                case 64981:                                 // Summon Random Vanquished Tentacle
+                {
+                    uint32 spell_id = 0;
+
+                    switch(urand(0, 2))
+                    {
+                        case 0: spell_id = 64982; break;    // Summon Vanquished Crusher Tentacle
+                        case 1: spell_id = 64983; break;    // Summon Vanquished Constrictor Tentacle
+                        case 2: spell_id = 64984; break;    // Summon Vanquished Corruptor Tentacle
+                    }
+
+                    m_caster->CastSpell(m_caster, spell_id, true);
+                    return;
+                }
+                case 66390:                                 // Read Last Rites
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT || m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Summon Tualiq Proxy
+                    // Not known what purpose this has
+                    unitTarget->CastSpell(unitTarget, 66411, true);
+
+                    // Summon Tualiq Spirit
+                    // Offtopic note: the summoned has aura from spell 37119 and 66419. One of them should
+                    // most likely make summoned "rise", hover up/sideways in the air (MOVEFLAG_LEVITATING + MOVEFLAG_HOVER)
+                    unitTarget->CastSpell(unitTarget, 66412, true);
+
+                    ((Player*)m_caster)->KilledMonsterCredit(unitTarget->GetEntry(), unitTarget->GetObjectGuid());
+
+                    // Must have a delay for proper spell animation
+                    ((Creature*)unitTarget)->ForcedDespawn(1000);
+                    return;
+                }
                 case 67019:                                 // Flask of the North
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -2274,6 +2298,15 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             break;
                     }
                     m_caster->CastSpell(m_caster, spell_id, true);
+                    return;
+                }
+                case 69922:                                 // Temper Quel'Delar
+                {
+                    if (!unitTarget)
+                        return;
+
+                    // Return Tempered Quel'Delar
+                    unitTarget->CastSpell(m_caster, 69956, true);
                     return;
                 }
                 case 70769:                                 // Divine Storm!
@@ -4352,6 +4385,12 @@ void Spell::EffectOpenLock(SpellEffectIndex eff_idx)
                 return;
             }
         }
+        // TODO: Add script for spell 41920 - Filling, becouse server it freze when use this spell
+        // handle outdoor pvp object opening, return true if go was registered for handling
+        // these objects must have been spawned by outdoorpvp!
+        else if(gameObjTarget->GetGOInfo()->type == GAMEOBJECT_TYPE_GOOBER && sOutdoorPvPMgr.HandleOpenGo(player, gameObjTarget->GetGUID()))
+            return;
+
         lockId = goInfo->GetLockId();
         guid = gameObjTarget->GetGUID();
     }
@@ -4636,7 +4675,7 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
             {
                 case 65:
                 case 428:
-                    EffectSummonPossessed(eff_idx);
+                    DoSummonPossessed(eff_idx);
                     break;
                 default:
                     DoSummonGuardian(eff_idx, summon_prop->FactionId);
@@ -4794,55 +4833,6 @@ void Spell::DoSummonGroupPets(SpellEffectIndex eff_idx)
         }
         DEBUG_LOG("New Pet (guidlow %d, entry %d) summoned (default). Counter is %d ", pet->GetGUIDLow(), pet->GetEntry(), pet->GetPetCounter());
     }
-
-}
-
-void Spell::EffectSummonPossessed(SpellEffectIndex eff_idx)
-{
-    if (!m_caster || m_caster->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    uint32 creature_entry = m_spellInfo->EffectMiscValue[eff_idx];
-    if(!creature_entry)
-        return;
-
-    int32 duration = GetSpellDuration(m_spellInfo);
-
-        float px, py, pz;
-    // If dest location if present
-    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
-    {
-        // Summon 1 unit in dest location
-        px = m_targets.m_destX;
-        py = m_targets.m_destY;
-        pz = m_targets.m_destZ;
-    }
-    // Summon if dest location not present near caster
-    else
-        m_caster->GetClosePoint(px,py,pz,1.0f);
-
-
-    TempSummonType summonType = (duration == 0) ? TEMPSUMMON_DEAD_DESPAWN : TEMPSUMMON_TIMED_OR_DEAD_DESPAWN;
-    Creature* summon = m_caster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration,true);
-
-    if (summon)
-    {
-        summon->SetLevel(m_caster->getLevel());
-
-        if(CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(summon))
-        {
-            // Prevent from ScriptedAI reinitialized
-            summon->LockAI(true);
-            m_caster->CastSpell(summon, 530, true);
-            summon->LockAI(false);
-        }
-        else
-            m_caster->CastSpell(summon, 530, true);
-
-        DEBUG_LOG("New possessed creature (guidlow %d, entry %d) summoned. Owner is %d ", summon->GetGUIDLow(), summon->GetEntry(), m_caster->GetGUIDLow());
-    }
-    else
-        sLog.outError("New possessed creature (entry %d) NOT summoned. Owner is %d ", summon->GetEntry(), m_caster->GetGUIDLow());
 
 }
 
@@ -5272,12 +5262,12 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         }
         // Summon if dest location not present near caster
         else
-            m_caster->GetClosePoint(px, py, pz,spawnCreature->GetObjectBoundingRadius());
+            m_caster->GetClosePoint(px, py, pz,m_caster->GetObjectBoundingRadius());
 
         if (!spawnCreature->SetSummonPosition(px,py,pz))
         {
             sLog.outError("Guardian pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
-                spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), spawnCreature->GetPositionX(), spawnCreature->GetPositionY());
+                spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), px, py);
             delete spawnCreature;
             return;
         }
@@ -5448,7 +5438,7 @@ void Spell::EffectEnchantItemPerm(SpellEffectIndex eff_idx)
     // Enchanting a vellum requires special handling, as it creates a new item
     // instead of modifying an existing one.
     ItemPrototype const* targetProto = itemTarget->GetProto();
-    if(targetProto->IsVellum() && m_spellInfo->EffectItemType[eff_idx])
+    if (targetProto->IsVellum() && m_spellInfo->EffectItemType[eff_idx])
     {
         unitTarget = m_caster;
         DoCreateItem(eff_idx,m_spellInfo->EffectItemType[eff_idx]);
@@ -5458,7 +5448,7 @@ void Spell::EffectEnchantItemPerm(SpellEffectIndex eff_idx)
         return;
     }
 
-    // not grow at item use at item case, using scrolls does not increase enchanting skill!
+    // Using enchant stored on scroll does not increase enchanting skill! (Already granted on scroll creation)
     if (!(m_CastItem && m_CastItem->GetProto()->Flags & ITEM_FLAG_ENCHANT_SCROLL))
         p_caster->UpdateCraftSkill(m_spellInfo->Id);
 
@@ -5700,6 +5690,65 @@ void Spell::EffectTameCreature(SpellEffectIndex /*eff_idx*/)
 
     // visual effect for levelup
     pet->SetLevel(level);
+}
+
+void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
+{
+    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+        return;
+    Player* p_caster = (Player*)m_caster;
+
+    uint32 creature_entry = m_spellInfo->EffectMiscValue[eff_idx];
+    if (!creature_entry)
+        return;
+
+    // possessed summons are always bound to an aura
+    if (!spellAuraHolder)
+    {
+        sLog.outDebug("Spell %i summons a possessed summon but has no aura it can be bound to.", m_spellInfo->Id);
+        return;
+    }
+
+    PossessedSummon* pCreature = new PossessedSummon();
+
+    Team p_team = p_caster->GetTeam();
+    if (!pCreature->Create(p_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), p_caster->GetMap(), p_caster->GetPhaseMask(), creature_entry, p_team))
+    {
+        delete pCreature;
+        return;
+    }
+
+    float px, py, pz;
+    // If dest location if present
+    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
+    {
+        // Summon 1 unit in dest location
+        px = m_targets.m_destX;
+        py = m_targets.m_destY;
+        pz = m_targets.m_destZ;
+    }
+    // Summon if dest location not present near caster
+    else
+        p_caster->GetClosePoint(px, py, pz, pCreature->GetObjectBoundingRadius());
+
+    pCreature->Relocate(px, py, pz, p_caster->GetOrientation());
+    pCreature->SetSummonPoint(px, py, pz, p_caster->GetOrientation());
+
+    if(!pCreature->IsPositionValid())
+    {
+        sLog.outError("Creature (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
+        delete pCreature;
+        return;
+    }
+
+    // initialize all stuff (owner, camera, etc...)
+    pCreature->Summon(p_caster, m_spellInfo->Id);
+
+    // bind to auraholder
+    spellAuraHolder->SetBoundUnit(pCreature->GetGUID());
+
+    if(forceFaction)
+        pCreature->setFaction(forceFaction);
 }
 
 void Spell::EffectSummonPet(SpellEffectIndex eff_idx)
@@ -7068,6 +7117,23 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     ((Player*)caster)->RemoveSpellCategoryCooldown(82, true);
                     return;
                 }
+                case 50894:                                 // Zul'Drak Rat
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    if (SpellAuraHolder* pHolder = unitTarget->GetSpellAuraHolder(m_spellInfo->Id))
+                    {
+                        if (pHolder->GetStackAmount() + 1 >= m_spellInfo->StackAmount)
+                        {
+                            // Gluttonous Lurkers: Summon Gorged Lurking Basilisk
+                            unitTarget->CastSpell(m_caster, 50928, true);
+                            ((Creature*)unitTarget)->ForcedDespawn(1);
+                        }
+                    }
+
+                    return;
+                }
                 case 51770:                                 // Emblazon Runeblade
                 {
                     Unit* caster = GetAffectiveCaster();
@@ -7344,6 +7410,28 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     else
                         unitTarget->CastSpell(unitTarget, 59314, true);
 
+                    return;
+                }
+                case 58916:                                 // Gift of the Lich King
+                {
+                    if (!unitTarget || unitTarget->isAlive())
+                        return;
+
+                    m_caster->CastSpell(unitTarget, 58915, true);
+
+                    unitTarget->RemoveFromWorld();
+
+                    if (Unit* master = m_caster->GetCharmerOrOwner())
+                        master->CastSpell(master, 58987, true);
+
+                    return;
+                }
+                case 58917:                                 // Consume minions
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    m_caster->CastSpell(unitTarget, 58919, true);
                     return;
                 }
                 case 59803:                                 // Consume: Spell of Trollgore hero
@@ -8102,8 +8190,9 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         CancelGlobalCooldown();
                         return;
                     }
-                    ((Player*)m_caster)->RemoveSpellCooldown(triggered_spell_id,true);
                     finish(true);
+                    ((Player*)m_caster)->RemoveSpellCooldown(m_spellInfo->CalculateSimpleValue(EFFECT_INDEX_2),true);
+                    ((Player*)m_caster)->RemoveSpellCooldown(m_spellInfo->CalculateSimpleValue(EFFECT_INDEX_1),true);
                     CancelGlobalCooldown();
                     return;
                 }
@@ -8910,8 +8999,7 @@ void Spell::EffectCharge(SpellEffectIndex /*eff_idx*/)
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
         ((Creature *)unitTarget)->StopMoving();
 
-    // Only send MOVEMENTFLAG_WALK_MODE, client has strange issues with other move flags
-    m_caster->MonsterMove(x, y, z, 1);
+    m_caster->MonsterMoveByPath(x, y, z, 25, false);
 
     // not all charge effects used in negative spells
     if (unitTarget != m_caster && !IsPositiveSpell(m_spellInfo->Id))
@@ -8939,11 +9027,7 @@ void Spell::EffectCharge2(SpellEffectIndex /*eff_idx*/)
     else
         return;
 
-    // Try to normalize Z coord cuz GetContactPoint do nothing with Z axis
-    unitTarget->UpdateGroundPositionZ(x, y, z, 5.0f);
-
-    // Only send MOVEMENTFLAG_WALK_MODE, client has strange issues with other move flags
-    m_caster->MonsterMove(x, y, z, 1);
+    m_caster->MonsterMoveByPath(x, y, z, 25, false);
 
     // not all charge effects used in negative spells
     if (unitTarget && unitTarget != m_caster && !IsPositiveSpell(m_spellInfo->Id))
@@ -9788,4 +9872,72 @@ void Spell::EffectFriendSummon( SpellEffectIndex eff_idx )
     DEBUG_LOG( "Spell::EffectFriendSummon called for player %u", ((Player*)m_caster)->GetSelectionGuid().GetCounter());
 
     m_caster->CastSpell(m_caster, m_spellInfo->EffectTriggerSpell[eff_idx], true);
+}
+
+// Used only for snake trap
+void Spell::DoSummonSnakes(SpellEffectIndex eff_idx)
+{
+    uint32 creature_entry = m_spellInfo->EffectMiscValue[eff_idx];
+    if (!creature_entry || !m_caster)
+        return;
+
+    // Find trap GO and get it coordinates to spawn snakes
+    GameObject* pTrap = m_caster->GetMap()->GetGameObject(m_originalCasterGUID);
+    if (!pTrap)
+    {
+        sLog.outError("EffectSummonSnakes faild to find trap for caster %s (GUID: %u)",m_caster->GetName(),m_caster->GetGUID());
+        return;
+    }
+
+    float position_x, position_y, position_z;
+    pTrap->GetPosition(position_x, position_y, position_z);
+
+    // Find summon duration based on DBC
+    int32 duration = GetSpellDuration(m_spellInfo);
+    if(Player* modOwner = m_caster->GetSpellModOwner())
+        modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
+    int32 amount = damage > 0 ? damage : 1;
+
+    for(int32 count = 0; count < amount; ++count)
+    {
+        TemporarySummon* pSummon = new TemporarySummon(m_caster->GetObjectGuid());
+
+        Team team = TEAM_NONE;
+        if (m_caster->GetTypeId()==TYPEID_PLAYER)
+            team = ((Player*)this)->GetTeam();
+
+        if (!pSummon->Create(m_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), m_caster->GetMap(), m_caster->GetPhaseMask(), creature_entry, team))
+        {
+            delete pSummon;
+            return;
+        }
+
+        float x, y, z;
+        pTrap->GetClosePoint(x, y, z, 2.0f, frand(0.0f, 5.0f), frand(0.0f, M_PI_F*2));
+        pSummon->Relocate(x, y, z, m_caster->GetOrientation());
+        pSummon->SetSummonPoint(x, y, z, m_caster->GetOrientation());
+
+        if(!pSummon->IsPositionValid())
+        {
+            sLog.outError("EffectSummonSnakes failed to summon snakes for Unit %s (GUID: %u) bacause of invalid position (x = %f, y = %f, z = %f map = %u)"
+                ,m_caster->GetName(),m_caster->GetGUID(), x, y, z, m_caster->GetMap());
+            delete pSummon;
+            return;
+        }
+
+        // Active state set before added to map
+        pSummon->SetActiveObjectState(false);
+
+        // Apply stats
+        pSummon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
+        pSummon->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE | UNIT_FLAG_PET_IN_COMBAT | UNIT_FLAG_PVP);
+        pSummon->SetCreatorGuid(m_caster->GetObjectGuid());
+        pSummon->SetOwnerGuid(m_caster->GetObjectGuid());
+        pSummon->setFaction(m_caster->getFaction());
+        pSummon->SetLevel(m_caster->getLevel());
+        pSummon->SetMaxHealth(m_caster->getLevel()+ urand(20,30));
+
+        pSummon->Summon(TEMPSUMMON_TIMED_DESPAWN, duration);
+    }
 }

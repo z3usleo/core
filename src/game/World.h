@@ -83,7 +83,8 @@ enum WorldTimers
     WUPDATE_EVENTS      = 6,
     WUPDATE_DELETECHARS = 7,
     WUPDATE_AUTOBROADCAST = 8,
-    WUPDATE_COUNT       = 9
+    WUPDATE_EXT_MAIL    = 9,
+    WUPDATE_COUNT       = 10
 };
 
 /// Configuration elements
@@ -120,6 +121,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_INSTANCE_RESET_TIME_HOUR,
     CONFIG_UINT32_INSTANCE_UNLOAD_DELAY,
     CONFIG_UINT32_MAX_SPELL_CASTS_IN_CHAIN,
+    CONFIG_UINT32_BIRTHDAY_TIME,
     CONFIG_UINT32_MAX_PRIMARY_TRADE_SKILL,
     CONFIG_UINT32_MIN_PETITION_SIGNS,
     CONFIG_UINT32_GM_LOGIN_STATE,
@@ -195,6 +197,8 @@ enum eConfigUInt32Values
     CONFIG_UINT32_RAF_MAXGRANTLEVEL,
     CONFIG_UINT32_RAF_MAXREFERALS,
     CONFIG_UINT32_RAF_MAXREFERERS,
+    CONFIG_UINT32_EXTERNAL_MAIL,
+    CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL,
     CONFIG_UINT32_VALUE_COUNT
 };
 
@@ -343,6 +347,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_ANTICHEAT_ENABLE,
     CONFIG_BOOL_ALLOW_FLIGHT_ON_OLD_MAPS,
     CONFIG_BOOL_ARMORY_SUPPORT,
+    CONFIG_BOOL_MMAP_ENABLED,
     CONFIG_BOOL_VALUE_COUNT
 };
 
@@ -576,11 +581,13 @@ class World
         static float GetMaxVisibleDistanceOnContinents()    { return m_MaxVisibleDistanceOnContinents; }
         static float GetMaxVisibleDistanceInInstances()     { return m_MaxVisibleDistanceInInstances;  }
         static float GetMaxVisibleDistanceInBGArenas()      { return m_MaxVisibleDistanceInBGArenas;   }
-        static float GetMaxVisibleDistanceForObject()       { return m_MaxVisibleDistanceForObject;   }
 
         static float GetMaxVisibleDistanceInFlight()        { return m_MaxVisibleDistanceInFlight;    }
         static float GetVisibleUnitGreyDistance()           { return m_VisibleUnitGreyDistance;       }
         static float GetVisibleObjectGreyDistance()         { return m_VisibleObjectGreyDistance;     }
+
+        static float GetRelocationLowerLimitSq()            { return m_relocation_lower_limit_sq; }
+        static uint32 GetRelocationAINotifyDelay()          { return m_relocation_ai_notify_delay; }
 
         void ProcessCliCommands();
         void QueueCliCommand(CliCommandHolder* commandHolder) { cliCmdQueue.add(commandHolder); }
@@ -670,11 +677,13 @@ class World
         static float m_MaxVisibleDistanceOnContinents;
         static float m_MaxVisibleDistanceInInstances;
         static float m_MaxVisibleDistanceInBGArenas;
-        static float m_MaxVisibleDistanceForObject;
 
         static float m_MaxVisibleDistanceInFlight;
         static float m_VisibleUnitGreyDistance;
         static float m_VisibleObjectGreyDistance;
+
+        static float  m_relocation_lower_limit_sq;
+        static uint32 m_relocation_ai_notify_delay;
 
         // CLI command holder to be thread safe
         ACE_Based::LockedQueue<CliCommandHolder*,ACE_Thread_Mutex> cliCmdQueue;

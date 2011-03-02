@@ -552,6 +552,7 @@ enum GOState
 // from `gameobject`
 struct GameObjectData
 {
+	explicit GameObjectData() : dbData(true) {}
     uint32 id;                                              // entry in gamobject_template
     uint16 mapid;
     uint16 phaseMask;
@@ -567,6 +568,8 @@ struct GameObjectData
     uint32 animprogress;
     GOState go_state;
     uint8 spawnMask;
+	uint8 artKit;
+	bool dbData;
 };
 
 // For containers:  [GO_NOT_READY]->GO_READY (close)->GO_ACTIVATED (open) ->GO_JUST_DEACTIVATED->GO_READY        -> ...
@@ -597,14 +600,15 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state, uint32 artKit = 0);
         void Update(uint32 update_diff, uint32 p_time);
-        GameObjectInfo const* GetGOInfo() const;
+        GameObjectInfo const* GetGOInfo() const { return m_goInfo; }
+        GameObjectData const* GetGOData() const { return m_goData; }
 
         bool IsTransport() const;
         bool IsDynTransport() const;
 
-        uint32 GetDBTableGUIDLow() const { return m_DBTableGuid; }
+        bool HasStaticDBSpawnData() const;                  // listed in `gameobject` table and have fixed in DB guid
 
         void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
 
@@ -659,7 +663,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void Delete();
 
         // Functions spawn/remove gameobject with DB guid in all loaded map copies (if point grid loaded in map)
-        // FIXME: it will work for for instanceable maps only after switch to use static guids)
         static void AddToRemoveListInMaps(uint32 db_guid, GameObjectData const* data);
         static void SpawnInMaps(uint32 db_guid, GameObjectData const* data);
 
@@ -669,7 +672,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         GOState GetGoState() const { return GOState(GetByteValue(GAMEOBJECT_BYTES_1, 0)); }
         void SetGoState(GOState state) { SetByteValue(GAMEOBJECT_BYTES_1, 0, state); }
         uint8 GetGoArtKit() const { return GetByteValue(GAMEOBJECT_BYTES_1, 2); }
-        void SetGoArtKit(uint8 artkit) { SetByteValue(GAMEOBJECT_BYTES_1, 2, artkit); }
+        void SetGoArtKit(uint8 artkit);
+        static void SetGoArtKit(uint8 artkit, GameObject *go, uint32 lowguid = 0);
         uint8 GetGoAnimProgress() const { return GetByteValue(GAMEOBJECT_BYTES_1, 3); }
         void SetGoAnimProgress(uint8 animprogress) { SetByteValue(GAMEOBJECT_BYTES_1, 3, animprogress); }
 
@@ -749,8 +753,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         ObjectGuid m_firstUser;                             // first GO user, in most used cases owner, but in some cases no, for example non-summoned multi-use GAMEOBJECT_TYPE_SUMMONING_RITUAL
         GuidsSet m_UniqueUsers;                             // all players who use item, some items activated after specific amount unique uses
 
-        uint32 m_DBTableGuid;                               ///< For new or temporary gameobjects is 0 for saved it is lowguid
         GameObjectInfo const* m_goInfo;
+        GameObjectData const* m_goData;
         uint64 m_rotation;
     private:
         void SwitchDoorOrButton(bool activate, bool alternative = false);

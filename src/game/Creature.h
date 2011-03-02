@@ -177,6 +177,7 @@ struct EquipmentInfo
 // from `creature` table
 struct CreatureData
 {
+	explicit CreatureData() : dbData(true) {}
     uint32 id;                                              // entry in creature_template
     uint16 mapid;
     uint16 phaseMask;
@@ -194,6 +195,7 @@ struct CreatureData
     bool  is_dead;
     uint8 movementType;
     uint8 spawnMask;
+	bool dbData;
 };
 
 struct CreatureDataAddonAura
@@ -386,6 +388,7 @@ enum CreatureSubtype
     CREATURE_SUBTYPE_PET,                                   // new Pet
     CREATURE_SUBTYPE_TOTEM,                                 // new Totem
     CREATURE_SUBTYPE_TEMPORARY_SUMMON,                      // new TemporarySummon
+    CREATURE_SUBTYPE_POSSESSED_SUMMON,                      // new PossessedSummon
 };
 
 class MANGOS_DLL_SPEC Creature : public Unit
@@ -405,7 +408,8 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void SelectLevel(const CreatureInfo *cinfo, float percentHealth = 100.0f, float percentMana = 100.0f);
         void LoadEquipment(uint32 equip_entry, bool force=false);
 
-        uint32 GetDBTableGUIDLow() const { return m_DBTableGuid; }
+        bool HasStaticDBSpawnData() const;                  // listed in `creature` table and have fixed in DB guid
+
         char const* GetSubName() const { return GetCreatureInfo()->SubName; }
 
         void Update(uint32 update_diff, uint32 time);                           // overwrite Unit::Update
@@ -416,6 +420,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         bool IsPet() const { return m_subtype == CREATURE_SUBTYPE_PET; }
         bool IsTotem() const { return m_subtype == CREATURE_SUBTYPE_TOTEM; }
         bool IsTemporarySummon() const { return m_subtype == CREATURE_SUBTYPE_TEMPORARY_SUMMON; }
+        bool isPossessedSummmon() const {return m_subtype == CREATURE_SUBTYPE_POSSESSED_SUMMON; }
 
         bool IsCorpse() const { return getDeathState() ==  CORPSE; }
         bool IsDespawned() const { return getDeathState() ==  DEAD; }
@@ -493,7 +498,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
             return (getLevel() / 2 + uint32(GetStat(STAT_STRENGTH) / 20));
         }
 
-        SpellSchoolMask GetSchoolMaskForAttackType() const { return m_meleeDamageSchoolMask; }
+        SpellSchoolMask GetSchoolMaskForAttackType(WeaponAttackType attType = BASE_ATTACK) const { return m_meleeDamageSchoolMask; }
         void SetMeleeDamageSchool(SpellSchools school) { m_meleeDamageSchoolMask = SpellSchoolMask(1 << school); }
 
         void _AddCreatureSpellCooldown(uint32 spell_id, time_t end_time);
@@ -603,7 +608,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void SetRespawnRadius(float dist) { m_respawnradius = dist; }
 
         // Functions spawn/remove creature with DB guid in all loaded map copies (if point grid loaded in map)
-        // FIXME: it will work for for instanceable maps only after switch to use static guids)
         static void AddToRemoveListInMaps(uint32 db_guid, CreatureData const* data);
         static void SpawnInMaps(uint32 db_guid, CreatureData const* data);
 
@@ -637,8 +641,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         void SetActiveObjectState(bool on);
 
-        void SetNeedNotify() { m_needNotify = true; }
-
         void SendAreaSpiritHealerQueryOpcode(Player *pl);
 
         void LockAI(bool lock) { m_AI_locked = lock; }
@@ -646,7 +648,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
     protected:
         bool CreateFromProto(ObjectGuid guid, uint32 Entry, Team team, const CreatureData *data = NULL, GameEventCreatureData const* eventData =NULL);
         bool InitEntry(uint32 entry, const CreatureData* data = NULL, GameEventCreatureData const* eventData = NULL);
-        void RelocationNotify();
 
         // vendor items
         VendorItemCounts m_vendorItemCounts;
@@ -670,7 +671,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void RegenerateHealth();
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed
-        uint32 m_DBTableGuid;                               ///< For new or temporary creatures is 0 for saved it is lowguid
         uint32 m_equipmentId;
 
         bool m_AlreadyCallAssistance;
@@ -678,7 +678,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
         bool m_regenHealth;
         bool m_AI_locked;
         bool m_isDeadByDefault;
-        bool m_needNotify;
 
         SpellSchoolMask m_meleeDamageSchoolMask;
         uint32 m_originalEntry;
