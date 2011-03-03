@@ -5894,6 +5894,9 @@ void Aura::HandleAuraModTotalEnergyPercentRegen(bool apply, bool /*Real*/)
     if(m_modifier.periodictime == 0)
         m_modifier.periodictime = 1000;
 
+    if(GetSpellProto()->Id == 60069)            // Dispersion HACK
+        m_modifier.m_miscvalue = 0;
+
     m_periodicTimer = m_modifier.periodictime;
     m_isPeriodic = apply;
 }
@@ -6383,9 +6386,7 @@ void Aura::HandleModDamageDone(bool apply, bool Real)
     // Magic damage modifiers implemented in Unit::SpellDamageBonusDone
     // This information for client side use only
     if (target->GetTypeId() == TYPEID_PLAYER)
-        for(uint8 i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
-            if(m_modifier.m_miscvalue & (1<<i))
-                target->ApplyModUInt32Value(m_positive ? PLAYER_FIELD_MOD_DAMAGE_DONE_POS + i : PLAYER_FIELD_MOD_DAMAGE_DONE_NEG + i, m_modifier.m_amount, apply);
+        ((Player*)target)->UpdateSpellDamageAndHealingBonus();
 }
 
 void Aura::HandleModDamagePercentDone(bool apply, bool Real)
