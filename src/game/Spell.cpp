@@ -44,6 +44,7 @@
 #include "BattleGround.h"
 #include "Util.h"
 #include "Vehicle.h"
+#include "Chat.h"
 
 #define SPELL_CHANNEL_UPDATE_INTERVAL (1 * IN_MILLISECONDS)
 
@@ -5420,7 +5421,15 @@ SpellCastResult Spell::CheckCast(bool strict)
 
                 Player* plrCaster = (Player*)caster;
 
-                if(plrCaster->getClass() != CLASS_HUNTER)
+                bool gmmode = m_triggeredBySpellInfo == NULL;
+
+                if (gmmode && !ChatHandler(plrCaster).FindCommand("npc tame"))
+                {
+                    plrCaster->SendPetTameFailure(PETTAME_UNKNOWNERROR);
+                    return SPELL_FAILED_DONT_REPORT;
+                }
+
+                if(plrCaster->getClass() != CLASS_HUNTER && !gmmode)
                 {
                     plrCaster->SendPetTameFailure(PETTAME_UNITSCANTTAME);
                     return SPELL_FAILED_DONT_REPORT;
@@ -5434,13 +5443,13 @@ SpellCastResult Spell::CheckCast(bool strict)
                     return SPELL_FAILED_DONT_REPORT;
                 }
 
-                if (target->getLevel() > plrCaster->getLevel())
+                if (target->getLevel() > plrCaster->getLevel() && !gmmode)
                 {
                     plrCaster->SendPetTameFailure(PETTAME_TOOHIGHLEVEL);
                     return SPELL_FAILED_DONT_REPORT;
                 }
 
-                if (target->GetCreatureInfo()->IsExotic() && !plrCaster->CanTameExoticPets())
+                if (target->GetCreatureInfo()->IsExotic() && !plrCaster->CanTameExoticPets() && !gmmode)
                 {
                     plrCaster->SendPetTameFailure(PETTAME_CANTCONTROLEXOTIC);
                     return SPELL_FAILED_DONT_REPORT;
@@ -6025,7 +6034,6 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
                                    || m_spellInfo->EffectImplicitTargetA[j] == TARGET_MASTER
                                    || m_spellInfo->EffectImplicitTargetA[j] == TARGET_IN_FRONT_OF_CASTER
                                    || m_spellInfo->EffectImplicitTargetA[j] == TARGET_EFFECT_SELECT
-                                   || m_spellInfo->EffectImplicitTargetA[j] == TARGET_CHAIN_DAMAGE
                                    || m_spellInfo->EffectImplicitTargetA[j] == TARGET_CASTER_COORDINATES);
                 }
                 if (m_caster->IsFriendlyTo(_target) && !(!m_caster->GetCharmerOrOwner() || !m_caster->GetCharmerOrOwner()->IsFriendlyTo(_target))
