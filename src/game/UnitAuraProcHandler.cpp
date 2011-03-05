@@ -3705,6 +3705,19 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                 if (pVictim != this)
                     return SPELL_AURA_PROC_FAILED;
             }
+            // Item - Rogue T10 4P Bonus
+            else if (auraSpellInfo->Id == 70803)
+            {
+                if (!procSpell)
+                    return SPELL_AURA_PROC_FAILED;
+
+                // only allow melee finishing move to proc
+                if (!(procSpell->AttributesEx & SPELL_ATTR_EX_REQ_TARGET_COMBO_POINTS) || procSpell->Id == 26679)
+                    return SPELL_AURA_PROC_FAILED;
+
+                trigger_spell_id = 70802;
+                target = this;
+            }
             break;
         case SPELLFAMILY_HUNTER:
         {
