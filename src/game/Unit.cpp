@@ -6241,7 +6241,7 @@ Pet* Unit::GetPet() const
     {
         if (IsInWorld())
         {
-            if (Pet* pet = GetMap()->GetPet(pet_guid))
+            if (Pet* pet = GetMapSafe()->GetPet(pet_guid))
                 return pet;
         }
 
