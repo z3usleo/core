@@ -2005,6 +2005,9 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
     // set first used pos in lists
     selector.InitializeAngle();
 
+    uint32 localCounter = 0;
+    uint32 localCounter2 = 0;
+
     // select in positions after current nodes (selection one by one)
     while(selector.NextAngle(angle))                        // angle for free pos
     {
@@ -2018,6 +2021,9 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
 
         if(IsWithinLOS(x,y,z))
             return;
+
+        if(++localCounter > 100)
+            break;
     }
 
     // BAD NEWS: not free pos (or used or have LOS problems)
@@ -2069,6 +2075,9 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
 
         if(IsWithinLOS(x,y,z))
             return;
+
+        if(++localCounter2 > 100)
+            break;
     }
 
     // BAD BAD NEWS: all found pos (free and used) have LOS problem :(

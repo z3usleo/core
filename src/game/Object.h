@@ -182,7 +182,10 @@ class MANGOS_DLL_SPEC Object
 
         const uint64& GetUInt64Value( uint16 index ) const
         {
-            MANGOS_ASSERT( index + 1 < m_valuesCount || PrintIndexError( index , false) );
+            // MANGOS_ASSERT( index + 1 < m_valuesCount || PrintIndexError( index , false) );
+            if (!m_uint32Values)
+                return GetUInt64Value(0);
+
             return *((uint64*)&(m_uint32Values[ index ]));
         }
 
@@ -570,7 +573,8 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         virtual bool isVisibleForInState(Player const* u, WorldObject const* viewPoint, bool inVisibleList) const = 0;
 
         void SetMap(Map * map);
-        Map * GetMap() const { MANGOS_ASSERT(m_currMap); return m_currMap; }
+        Map * GetMap() const { return m_currMap; }
+        Map * GetMapSafe() const { return m_currMap; }
         //used to check all object's GetMap() calls when object is not in world!
         void ResetMap() { m_currMap = NULL; }
 
