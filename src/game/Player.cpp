@@ -6736,6 +6736,9 @@ void Player::UpdateHonorFields()
 ///An exact honor value can also be given (overriding the calcs)
 bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
 {
+    if(HasAura(43681))
+        return false;
+
     // do not reward honor in arenas, but enable onkill spellproc
     if(InArena())
     {
