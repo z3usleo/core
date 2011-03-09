@@ -2233,6 +2233,16 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     ((spellInfo_1->Category == 44 && spellInfo_2->Category == 0) ||
                     (spellInfo_2->Category == 44 && spellInfo_1->Category == 0)))
                     return false;
+
+                // Sap & Stealth - Sap should remove Stealth aura
+                if ((spellInfo_2->SpellIconID == 250 && spellInfo_1->SpellIconID == 249))
+                    return true;
+            }
+            else if ( spellInfo_2->SpellFamilyName == SPELLFAMILY_DRUID ) 
+            {
+                // Sap & Prowl - Sap should remove Prowl aura
+                if ((spellInfo_2->SpellIconID == 103 && spellInfo_1->SpellIconID == 249))
+                    return true;
             }
             else if ( spellInfo_2->SpellFamilyName == SPELLFAMILY_GENERIC ) 
             {
