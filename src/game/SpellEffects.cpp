@@ -3290,6 +3290,14 @@ void Spell::EffectForceCast(SpellEffectIndex eff_idx)
         return;
     }
 
+    // Hack for quest 12701. Player needs to be out of the vehicle,
+    // in order to escape with the Scourge Gryphon
+    if(spellInfo->Id == 52589 && unitTarget->GetTypeId() == TYPEID_PLAYER)
+    {
+        if (unitTarget->GetVehicle())
+            unitTarget->ExitVehicle();
+    }
+
     unitTarget->CastSpell(unitTarget, spellInfo, true, NULL, NULL, m_originalCasterGUID);
 }
 
