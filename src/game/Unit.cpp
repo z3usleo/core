@@ -7752,7 +7752,8 @@ uint32 Unit::MeleeDamageBonusDone(Unit *pVictim, uint32 pdamage,WeaponAttackType
         AuraList const& mModDamageDone = GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE);
         for(AuraList::const_iterator i = mModDamageDone.begin(); i != mModDamageDone.end(); ++i)
         {
-            if ((*i)->GetModifier()->m_miscvalue & schoolMask &&                                    // schoolmask has to fit with the intrinsic spell school...
+            if ((*i)->GetSpellProto()->AttributesEx4 & SPELL_ATTR_EX4_PET_SCALING_AURA ||           // completely schoolmask-independend: pet scaling auras, see note
+                (*i)->GetModifier()->m_miscvalue & schoolMask &&                                    // schoolmask has to fit with the intrinsic spell school...
                 (*i)->GetModifier()->m_miscvalue & SPELL_SCHOOL_MASK_NORMAL &&                      // ...AND schoolmask has to contain physical spell school (seems to be the most logic sollution)
                 ((*i)->GetSpellProto()->EquippedItemClass == -1 ||                                  // general, weapon independent
                 pWeapon && pWeapon->IsFitToSpellRequirements((*i)->GetSpellProto()) ||              // OR used weapon fits aura requirements
@@ -7763,6 +7764,10 @@ uint32 Unit::MeleeDamageBonusDone(Unit *pVictim, uint32 pdamage,WeaponAttackType
                 DoneFlat += (*i)->GetModifier()->m_amount;
             }
         }
+        /* Additional note to pet scaling auras:
+           Those auras have SPELL_SCHOOL_MASK_MAGIC, but anyway should also affect
+           physical damage from non-weapon-damage-based spells (claw, swipe etc.).
+        */
     }
 
     // ..done flat (by creature type mask)
