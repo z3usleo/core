@@ -791,8 +791,8 @@ void Spell::prepareDataForTriggerSystem()
                     m_canTrigger = true;
                 break;
             case SPELLFAMILY_PRIEST:
-                // For Penance,Mind Sear,Mind Flay heal/damage triggers need do it
-                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0001800000800000) || (m_spellInfo->SpellFamilyFlags2 & 0x00000040))
+                // For Penance,Mind Sear,Mind Flay, Empowered Renew heal/damage triggers need do it
+                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0001800000800000) || (m_spellInfo->SpellFamilyFlags2 & 0x00001040))
                     m_canTrigger = true;
                 break;
             case SPELLFAMILY_ROGUE:
