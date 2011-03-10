@@ -1962,7 +1962,7 @@ void Aura::TriggerSpell()
 
     // All ok cast by default case
     if (triggeredSpellInfo)
-        caster->CastSpell(triggerTarget, triggeredSpellInfo, true, NULL, this, casterGUID);
+        target->CastSpell(triggerTarget, triggeredSpellInfo, true, NULL, this, casterGUID);
     else
     {
         if (triggerTarget->GetTypeId() != TYPEID_UNIT || !sScriptMgr.OnEffectDummy(caster, GetId(), GetEffIndex(), (Creature*)triggerTarget))
@@ -1973,16 +1973,16 @@ void Aura::TriggerSpell()
 void Aura::TriggerSpellWithValue()
 {
     ObjectGuid casterGuid = GetCasterGuid();
-    Unit* target = GetTriggerTarget();
+    Unit* triggerTarget = GetTriggerTarget();
 
-    if (casterGuid.IsEmpty() || !target)
+    if (!triggerTarget)
         return;
 
     // generic casting code with custom spells and target/caster customs
     uint32 trigger_spell_id = GetSpellProto()->EffectTriggerSpell[m_effIndex];
     int32  basepoints0 = GetModifier()->m_amount;
 
-    target->CastCustomSpell(target, trigger_spell_id, &basepoints0, NULL, NULL, true, NULL, this, casterGuid);
+    GetTarget()->CastCustomSpell(triggerTarget, trigger_spell_id, &basepoints0, NULL, NULL, true, NULL, this, casterGuid);
 }
 
 /*********************************************************/
