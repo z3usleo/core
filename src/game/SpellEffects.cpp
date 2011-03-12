@@ -483,6 +483,49 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         else damage = 0;
                         break;
                     }
+                    case 28062:
+                    case 28085:
+                    case 39090:
+                    case 39093:
+					// Positive/Negative Charge - Naxxramas - Thaddius
+					{
+                        if (!m_triggeredByAuraSpell)
+                            break;
+                        if (unitTarget == m_caster)
+                        {
+                            uint8 count = 0;
+                            for (std::list<TargetInfo>::iterator itr = m_UniqueTargetInfo.begin(); itr != m_UniqueTargetInfo.end(); ++itr)
+                                if (itr->targetGUID != m_caster->GetGUID())
+                                    if (Player *target = m_caster->GetMap()->GetPlayer(itr->targetGUID))
+                                        if (target->HasAura(m_triggeredByAuraSpell->Id))
+                                            ++count;
+                            if (count)
+                            {
+                                uint32 spellId = 0;
+                                switch (m_spellInfo->Id)
+                                {
+                                    case 28062: spellId = 29659; break;
+                                    case 28085: spellId = 29660; break;
+                                    case 39090: spellId = 39089; break;
+                                    case 39093: spellId = 39092; break;
+                                }
+                                //m_caster->SetAuraStack(spellId, m_caster, count);
+								//Aura *aura = m_caster->GetAura(spellId, m_caster->GetGUID());
+								if (!m_caster->HasAura(spellId))
+								{
+									m_caster->CastSpell(m_caster, spellId, false);
+								}
+
+								if(SpellAuraHolder* chargesholder = m_caster->GetSpellAuraHolder(spellId, m_caster->GetGUID()))
+									chargesholder->SetStackAmount(count);
+								//chargesholder->SetAuraCharges
+                            }
+                        }
+
+                        if (unitTarget->HasAura(m_triggeredByAuraSpell->Id))
+                            damage = 0;
+                        break;
+					}
                 }
                 break;
             }
