@@ -2415,6 +2415,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 72195, true);
                     break;
                 }
+				case 51858:									// Remove Stealth from Eye of Acherus
+				{
+					m_caster->RemoveAurasDueToSpell(52006);
+					break;
+				}
             }
             break;
         }
@@ -5872,6 +5877,15 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
     // initialize all stuff (owner, camera, etc...)
     pCreature->Summon(p_caster, m_spellInfo->Id);
 
+	if(CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(pCreature))
+	{
+		pCreature->LockAI(true);
+		p_caster->CastSpell(pCreature, 530, true);
+		pCreature->LockAI(false);
+	}
+	else
+		p_caster->CastSpell(pCreature, 530, true);
+
     // bind to auraholder
     spellAuraHolder->SetBoundUnit(pCreature->GetGUID());
 
@@ -7379,6 +7393,10 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                 {
                     if (!m_caster || m_caster->GetTypeId() != TYPEID_UNIT)
                         return;
+
+					if (Unit* pController = m_caster->GetCharmer())
+						pController->RemoveAurasDueToSpell(51852);
+
                     m_caster->RemoveAurasDueToSpell(530);
                     return;
                 }
