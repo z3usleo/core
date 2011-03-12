@@ -4659,9 +4659,12 @@ void Aura::HandleInvisibility(bool apply, bool Real)
 
         if (Real && target->GetTypeId()==TYPEID_PLAYER)
         {
-            // apply glow vision
-            target->SetByteFlag(PLAYER_FIELD_BYTES2, 3, PLAYER_FIELD_BYTE2_INVISIBILITY_GLOW);
-
+			Player * pl = (Player*)target;
+			if (!pl->GetMap()->IsBattleArena() || (!pl->GetBattleGround() || !(pl->GetBattleGround()->GetStatus() == STATUS_WAIT_JOIN)))
+			{
+				// apply glow vision
+				target->SetByteFlag(PLAYER_FIELD_BYTES2, 3, PLAYER_FIELD_BYTE2_INVISIBILITY_GLOW);
+			}
         }
 
         // apply only if not in GM invisibility and not stealth
