@@ -690,7 +690,7 @@ void OutdoorPvPEP::BuffTeams()
 {
     for (PlayerSet::iterator itr = m_players[0].begin(); itr != m_players[0].end(); ++itr)
     {
-        Player * plr = *itr;
+        if (Player * plr = *itr)
         {
             for (int i = 0; i < 4; ++i)
                 plr->RemoveAurasDueToSpell(EP_AllianceBuffs[i]);
@@ -700,7 +700,7 @@ void OutdoorPvPEP::BuffTeams()
     }
     for (PlayerSet::iterator itr = m_players[1].begin(); itr != m_players[1].end(); ++itr)
     {
-        Player * plr = *itr;
+        if (Player * plr = *itr)
         {
             for (int i = 0; i < 4; ++i)
                 plr->RemoveAurasDueToSpell(EP_HordeBuffs[i]);
