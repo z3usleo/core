@@ -4392,6 +4392,8 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
                     case SPELL_AURA_MOD_MELEE_HASTE:  // for Icy Touch
                     case SPELL_AURA_MOD_RANGED_HASTE: // for Icy Touch
                     case SPELL_AURA_MOD_DAMAGE_TAKEN: // for Hemorrhage
+					case SPELL_AURA_MOD_HIT_CHANCE:   // for Scorpid Sting 
+					case SPELL_AURA_MOD_SPELL_HIT_CHANCE: // for Scorpid Sting
                         break;
                     case SPELL_AURA_PERIODIC_ENERGIZE:      // all or self or clear non-stackable
                     default:                                // not allow
