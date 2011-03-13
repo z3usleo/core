@@ -484,6 +484,49 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         else damage = 0;
                         break;
                     }
+                    case 28062:
+                    case 28085:
+                    case 39090:
+                    case 39093:
+					// Positive/Negative Charge - Naxxramas - Thaddius
+					{
+                        if (!m_triggeredByAuraSpell)
+                            break;
+                        if (unitTarget == m_caster)
+                        {
+                            uint8 count = 0;
+                            for (std::list<TargetInfo>::iterator itr = m_UniqueTargetInfo.begin(); itr != m_UniqueTargetInfo.end(); ++itr)
+                                if (itr->targetGUID != m_caster->GetGUID())
+                                    if (Player *target = m_caster->GetMap()->GetPlayer(itr->targetGUID))
+                                        if (target->HasAura(m_triggeredByAuraSpell->Id))
+                                            ++count;
+                            if (count)
+                            {
+                                uint32 spellId = 0;
+                                switch (m_spellInfo->Id)
+                                {
+                                    case 28062: spellId = 29659; break;
+                                    case 28085: spellId = 29660; break;
+                                    case 39090: spellId = 39089; break;
+                                    case 39093: spellId = 39092; break;
+                                }
+                                //m_caster->SetAuraStack(spellId, m_caster, count);
+								//Aura *aura = m_caster->GetAura(spellId, m_caster->GetGUID());
+								if (!m_caster->HasAura(spellId))
+								{
+									m_caster->CastSpell(m_caster, spellId, false);
+								}
+
+								if(SpellAuraHolder* chargesholder = m_caster->GetSpellAuraHolder(spellId, m_caster->GetGUID()))
+									chargesholder->SetStackAmount(count);
+								//chargesholder->SetAuraCharges
+                            }
+                        }
+
+                        if (unitTarget->HasAura(m_triggeredByAuraSpell->Id))
+                            damage = 0;
+                        break;
+					}
                 }
                 break;
             }
@@ -2415,11 +2458,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 72195, true);
                     break;
                 }
-				case 51858:									// Remove Stealth from Eye of Acherus
-				{
-					m_caster->RemoveAurasDueToSpell(52006);
-					break;
-				}
+                case 51858:									// Remove Stealth from Eye of Acherus
+                {
+                    m_caster->RemoveAurasDueToSpell(52006);
+                    break;
+                }
             }
             break;
         }
@@ -5877,14 +5920,14 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
     // initialize all stuff (owner, camera, etc...)
     pCreature->Summon(p_caster, m_spellInfo->Id);
 
-	if(CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(pCreature))
-	{
-		pCreature->LockAI(true);
-		p_caster->CastSpell(pCreature, 530, true);
-		pCreature->LockAI(false);
-	}
-	else
-		p_caster->CastSpell(pCreature, 530, true);
+    if(CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(pCreature))
+    {
+        pCreature->LockAI(true);
+        p_caster->CastSpell(pCreature, 530, true);
+        pCreature->LockAI(false);
+    }
+    else
+        p_caster->CastSpell(pCreature, 530, true);
 
     // bind to auraholder
     spellAuraHolder->SetBoundUnit(pCreature->GetGUID());
@@ -7394,8 +7437,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     if (!m_caster || m_caster->GetTypeId() != TYPEID_UNIT)
                         return;
 
-					if (Unit* pController = m_caster->GetCharmer())
-						pController->RemoveAurasDueToSpell(51852);
+                    if (Unit* pController = m_caster->GetCharmer())
+                        pController->RemoveAurasDueToSpell(51852);
 
                     m_caster->RemoveAurasDueToSpell(530);
                     return;

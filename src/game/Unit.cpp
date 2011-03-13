@@ -4392,6 +4392,13 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
                     case SPELL_AURA_PERIODIC_MANA_LEECH:
                     case SPELL_AURA_OBS_MOD_ENERGY:
                     case SPELL_AURA_POWER_BURN_MANA:
+                    case SPELL_AURA_MOD_DAMAGE_FROM_CASTER: // required for Serpent Sting (blizz hackfix?)
+                    case SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE: // for Deadly Poison
+                    case SPELL_AURA_MOD_MELEE_HASTE:  // for Icy Touch
+                    case SPELL_AURA_MOD_RANGED_HASTE: // for Icy Touch
+                    case SPELL_AURA_MOD_DAMAGE_TAKEN: // for Hemorrhage
+					case SPELL_AURA_MOD_HIT_CHANCE:   // for Scorpid Sting 
+					case SPELL_AURA_MOD_SPELL_HIT_CHANCE: // for Scorpid Sting
                         break;
                     case SPELL_AURA_PERIODIC_ENERGIZE:      // all or self or clear non-stackable
                     default:                                // not allow
