@@ -5858,13 +5858,6 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     PossessedSummon* pCreature = new PossessedSummon();
 
-    Team p_team = p_caster->GetTeam();
-    if (!pCreature->Create(p_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), p_caster->GetMap(), p_caster->GetPhaseMask(), creature_entry, p_team))
-    {
-        delete pCreature;
-        return;
-    }
-
     float px, py, pz;
     // If dest location if present
     if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
@@ -5878,8 +5871,16 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
     else
         p_caster->GetClosePoint(px, py, pz, pCreature->GetObjectBoundingRadius());
 
-    pCreature->Relocate(px, py, pz, p_caster->GetOrientation());
-    pCreature->SetSummonPoint(px, py, pz, p_caster->GetOrientation());
+    Team p_team = p_caster->GetTeam();
+    CreatureCreatePos pos(p_caster->GetMap(), px, py, pz, -p_caster->GetOrientation(), p_caster->GetPhaseMask());
+
+    if (!pCreature->Create(p_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), pos, creature_entry, p_team))
+    {
+        delete pCreature;
+        return;
+    }
+
+    pCreature->SetSummonPoint(pos);
 
     if(!pCreature->IsPositionValid())
     {
@@ -10128,16 +10129,17 @@ void Spell::DoSummonSnakes(SpellEffectIndex eff_idx)
         if (m_caster->GetTypeId()==TYPEID_PLAYER)
             team = ((Player*)this)->GetTeam();
 
-        if (!pSummon->Create(m_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), m_caster->GetMap(), m_caster->GetPhaseMask(), creature_entry, team))
+        float x, y, z;
+        pTrap->GetClosePoint(x, y, z, 2.0f, frand(0.0f, 5.0f), frand(0.0f, M_PI_F*2));
+        CreatureCreatePos pos(m_caster->GetMap(), x, y, z, -m_caster->GetOrientation(), m_caster->GetPhaseMask());
+
+        if (!pSummon->Create(m_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), pos, creature_entry, team))
         {
             delete pSummon;
             return;
         }
 
-        float x, y, z;
-        pTrap->GetClosePoint(x, y, z, 2.0f, frand(0.0f, 5.0f), frand(0.0f, M_PI_F*2));
-        pSummon->Relocate(x, y, z, m_caster->GetOrientation());
-        pSummon->SetSummonPoint(x, y, z, m_caster->GetOrientation());
+        pSummon->SetSummonPoint(pos);
 
         if(!pSummon->IsPositionValid())
         {
