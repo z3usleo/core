@@ -693,7 +693,7 @@ void Pet::Unsummon(PetSaveMode mode, Unit* owner /*= NULL*/)
 
                 // Special way for remove cooldown if SPELL_ATTR_DISABLED_WHILE_ACTIVE
                 if (spellInfo && spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
-                    if (p_owner->GetTemporaryUnsummonedPetNumber() != GetCharmInfo()->GetPetNumber())
+                    if (p_owner->GetTemporaryUnsummonedPetNumber() != GetCharmInfo()->GetPetNumber() || mode == PET_SAVE_REAGENTS)
                         p_owner->SendCooldownEvent(spellInfo);
             }
         }
