@@ -1810,9 +1810,6 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     pCreature->Summon(spwtype, despwtime);
 
-    if (GetTypeId() == TYPEID_UNIT)
-        pCreature->SetCreatorGuid(GetObjectGuid());
-
     if(GetTypeId()==TYPEID_UNIT && ((Creature*)this)->AI())
         ((Creature*)this)->AI()->JustSummoned(pCreature);
 
