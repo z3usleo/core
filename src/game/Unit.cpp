@@ -2973,7 +2973,7 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
 
     // parry chances
     // check if attack comes from behind, nobody can parry or block if attacker is behind
-    if (!from_behind)
+    if (!from_behind || pVictim->HasAura(19263))
     {
         // Reduce parry chance by attacker expertise rating
         if (GetTypeId() == TYPEID_PLAYER)
@@ -3400,6 +3400,13 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     modHitChance+=GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_INCREASES_SPELL_PCT_TO_HIT, schoolMask);
     // Chance hit from victim SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE auras
     modHitChance+= pVictim->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE, schoolMask);
+    
+    // Cloak of Shadows - should be ignored by Chaos Bolt
+    // handling of CoS aura is wrong? should be resist, not miss
+    if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
+        if (Aura *aura = pVictim->GetAura(31224, EFFECT_INDEX_0))
+            modHitChance -= aura->GetModifier()->m_amount;
+
     // Reduce spell hit chance for Area of effect spells from victim SPELL_AURA_MOD_AOE_AVOIDANCE aura
     if (IsAreaOfEffectSpell(spell))
         modHitChance-=pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_AOE_AVOIDANCE);
@@ -3439,6 +3446,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     int32 tmp = 10000 - HitChance;
 
     int32 rand = irand(0,10000);
+    
+    // Chaos Bolt cannot be deflected
+    if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
+        return SPELL_MISS_NONE;
 
     if (rand < tmp)
         return SPELL_MISS_MISS;
@@ -4393,12 +4404,18 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
                     case SPELL_AURA_OBS_MOD_ENERGY:
                     case SPELL_AURA_POWER_BURN_MANA:
                     case SPELL_AURA_MOD_DAMAGE_FROM_CASTER: // required for Serpent Sting (blizz hackfix?)
-                    case SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE: // for Deadly Poison
                     case SPELL_AURA_MOD_MELEE_HASTE:  // for Icy Touch
                     case SPELL_AURA_MOD_RANGED_HASTE: // for Icy Touch
                     case SPELL_AURA_MOD_DAMAGE_TAKEN: // for Hemorrhage
-					case SPELL_AURA_MOD_HIT_CHANCE:   // for Scorpid Sting 
-					case SPELL_AURA_MOD_SPELL_HIT_CHANCE: // for Scorpid Sting
+                    case SPELL_AURA_MOD_HIT_CHANCE:   // for Scorpid Sting 
+                    case SPELL_AURA_MOD_SPELL_HIT_CHANCE: // for Scorpid Sting
+                        break; 
+                    case SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE: // Deadly Poison exception
+                        if (aurSpellInfo->Dispel != DISPEL_POISON)             // TODO: stacking rules for all poisons
+                        {
+                            RemoveSpellAuraHolder(foundHolder,AURA_REMOVE_BY_STACK);
+                            stop = true;
+                        }
                         break;
                     case SPELL_AURA_PERIODIC_ENERGIZE:      // all or self or clear non-stackable
                     default:                                // not allow
