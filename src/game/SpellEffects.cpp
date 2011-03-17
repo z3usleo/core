@@ -5389,16 +5389,6 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         else
             pos = CreatureCreatePos(m_caster, m_caster->GetOrientation());
 
-        // Mirror Image
-        if (pet_entry == 31216)
-        {
-                // Set correct health and mana
-                spawnCreature->SetMaxHealth(m_caster->GetMaxHealth()/3.0f);
-                spawnCreature->SetHealth(m_caster->GetHealth()/3.0f);
-                spawnCreature->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA));
-                spawnCreature->SetPower(POWER_MANA, m_caster->GetPower(POWER_MANA));
-        }
-
         if (!spawnCreature->Create(0, pos, m_spellInfo->EffectMiscValue[eff_idx], 0, m_caster))
         {
             sLog.outError("Guardian pet (guidlow %d, entry %d) not summoned.",
@@ -5409,6 +5399,16 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
 
         spawnCreature->setFaction(forceFaction ? forceFaction : m_caster->getFaction());
         spawnCreature->SetLevel(level);
+
+        // Mirror Image
+        if (pet_entry == 31216)
+        {
+                // Set correct health and mana
+                spawnCreature->SetMaxHealth(m_caster->GetMaxHealth()/3.0f);
+                spawnCreature->SetHealth(m_caster->GetMaxHealth()/3.0f);
+                spawnCreature->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA));
+                spawnCreature->SetPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA));
+        }
 
         if (!spawnCreature->Summon())
         {
