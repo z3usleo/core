@@ -10186,7 +10186,7 @@ void SpellAuraHolder::HandleBoundUnit(bool apply)
 
                 if (!boundUnit)
                     return;
-                MANGOS_ASSERT((boundUnit->GetTypeId() == TYPEID_UNIT && ((Creature*)boundUnit)->isPossessedSummmon()));
+                MANGOS_ASSERT((boundUnit->GetTypeId() == TYPEID_UNIT && ((Creature*)boundUnit)->IsPossessedSummon()));
                 ((PossessedSummon*)boundUnit)->UnSummon();
                 return;
             }

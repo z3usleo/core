@@ -5858,22 +5858,13 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     PossessedSummon* pCreature = new PossessedSummon();
 
-    float px, py, pz;
-    // If dest location if present
-    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
-    {
-        // Summon 1 unit in dest location
-        px = m_targets.m_destX;
-        py = m_targets.m_destY;
-        pz = m_targets.m_destZ;
-    }
-    // Summon if dest location not present near caster
-    else
-        p_caster->GetClosePoint(px, py, pz, pCreature->GetObjectBoundingRadius());
+    // Summon in dest location
+    CreatureCreatePos pos(p_caster->GetMap(), m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, p_caster->GetOrientation(), p_caster->GetPhaseMask());
+
+    if (!(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION))
+        pos = CreatureCreatePos(m_caster, m_caster->GetOrientation());
 
     Team p_team = p_caster->GetTeam();
-    CreatureCreatePos pos(p_caster->GetMap(), px, py, pz, -p_caster->GetOrientation(), p_caster->GetPhaseMask());
-
     if (!pCreature->Create(p_caster->GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), pos, creature_entry, p_team))
     {
         delete pCreature;
@@ -5882,24 +5873,8 @@ void Spell::DoSummonPossessed(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     pCreature->SetSummonPoint(pos);
 
-    if(!pCreature->IsPositionValid())
-    {
-        sLog.outError("Creature (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
-        delete pCreature;
-        return;
-    }
-
     // initialize all stuff (owner, camera, etc...)
     pCreature->Summon(p_caster, m_spellInfo->Id);
-
-    if(CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(pCreature))
-    {
-        pCreature->LockAI(true);
-        p_caster->CastSpell(pCreature, 530, true);
-        pCreature->LockAI(false);
-    }
-    else
-        p_caster->CastSpell(pCreature, 530, true);
 
     // bind to auraholder
     spellAuraHolder->SetBoundUnit(pCreature->GetGUID());
