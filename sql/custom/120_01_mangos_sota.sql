@@ -1,4 +1,4 @@
-﻿-- Strand of the Ancients BattleGround
+-- Strand of the Ancients BattleGround
 
 UPDATE `creature_template` SET npcflag=1, `ScriptName` = 'npc_sa_vendor' WHERE entry in (29260,29262);
 -- Seaforium source

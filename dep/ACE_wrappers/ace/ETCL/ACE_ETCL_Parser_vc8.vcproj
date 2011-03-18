@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9,00"
 	Name="ACE_ETCL_Parser"
 	ProjectGUID="{C756716B-FECA-1BAD-007E-8A67757B007A}"
 	RootNamespace="ACE_ETCL_Parser"
 	Keyword="Win32Proj"
-	SignManifests="true"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -25,7 +25,6 @@
 			IntermediateDirectory="Debug\ACE_ETCL_Parser_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -83,11 +82,16 @@
 				AdditionalLibraryDirectories=".;..\..\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_ETCL_Parserd.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -99,6 +103,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -108,7 +115,6 @@
 			IntermediateDirectory="Release\ACE_ETCL_Parser_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -165,11 +171,16 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_ETCL_Parser.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -181,6 +192,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -190,7 +204,6 @@
 			IntermediateDirectory="Debug\ACE_ETCL_Parser_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -274,7 +287,6 @@
 			IntermediateDirectory="Release\ACE_ETCL_Parser_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -357,82 +369,90 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;cxx;cc;c;C">
+			Filter="cpp;cxx;cc;c;C"
+			>
 			<File
-				RelativePath="ETCL_Interpreter.cpp">
+				RelativePath="ETCL_Interpreter.cpp"
+				>
 			</File>
 			<File
-				RelativePath="ETCL_l.cpp">
+				RelativePath="ETCL_l.cpp"
+				>
 			</File>
 			<File
-				RelativePath="ETCL_y.cpp">
+				RelativePath="ETCL_y.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hh">
+			Filter="h;hpp;hxx;hh"
+			>
 			<File
-				RelativePath="ETCL_Interpreter.h">
+				RelativePath="ETCL_Interpreter.h"
+				>
 			</File>
 			<File
-				RelativePath="etcl_parser_export.h">
+				RelativePath="etcl_parser_export.h"
+				>
 			</File>
 			<File
-				RelativePath="ETCL_y.h">
+				RelativePath="ETCL_y.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Build Files"
-			Filter="mpc;mpb;mwc">
+			Filter="mpc;mpb;mwc"
+			>
 			<File
-				RelativePath="ETCL.mpc">
+				RelativePath="ETCL.mpc"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 			</File>
 		</Filter>
 		<Filter
 			Name="Pkgconfig Files"
-			Filter="pcin">
+			Filter="pcin"
+			>
 			<File
-				RelativePath="ACE_ETCL_Parser.pc.in">
+				RelativePath="ACE_ETCL_Parser.pc.in"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 			</File>
 		</Filter>
 	</Files>

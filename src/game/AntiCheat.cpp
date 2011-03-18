@@ -352,7 +352,7 @@ bool AntiCheat::CheckNeeded(AntiCheatCheck checktype)
     if (!sWorld.getConfig(CONFIG_BOOL_ANTICHEAT_ENABLE)
         || !GetPlayer()->IsInWorld()
         || GetPlayer()->IsBeingTeleported()
-        || GetPlayer()->GetSession()->GetSecurity() > sWorld.getConfig(CONFIG_UINT32_ANTICHEAT_GMLEVEL))
+        || GetPlayer()->GetSession()->GetSecurity() > int32(sWorld.getConfig(CONFIG_UINT32_ANTICHEAT_GMLEVEL)))
         return false;
 
     if (GetMover()->HasAuraType(SPELL_AURA_MOD_CONFUSE))
@@ -728,6 +728,7 @@ bool AntiCheat::CheckSpellOndeath()
     sprintf(buffer," player is not in ALIVE state, but cast spell %u ",
                  m_currentspellID);
 
+	return false;
 }
 
 bool AntiCheat::CheckSpellFamily()

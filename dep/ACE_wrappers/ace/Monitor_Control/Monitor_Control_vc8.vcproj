@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9,00"
 	Name="Monitor_Control"
 	ProjectGUID="{B465937A-FECA-1BAD-D619-74620E01B14C}"
 	RootNamespace="Monitor_Control"
 	Keyword="Win32Proj"
-	SignManifests="true"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -25,7 +25,6 @@
 			IntermediateDirectory="Debug\Monitor_Control_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -83,11 +82,16 @@
 				AdditionalLibraryDirectories=".;..\..\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_Monitor_Controld.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -99,6 +103,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -108,7 +115,6 @@
 			IntermediateDirectory="Release\Monitor_Control_vc8\I386"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -165,11 +171,16 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="..\..\lib\ACE_Monitor_Control.lib"
 				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -181,6 +192,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -190,7 +204,6 @@
 			IntermediateDirectory="Debug\Monitor_Control_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -274,7 +287,6 @@
 			IntermediateDirectory="Release\Monitor_Control_vc8\AMD64"
 			ConfigurationType="2"
 			CharacterSet="0"
-
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -357,160 +369,203 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;cxx;cc;c;C">
+			Filter="cpp;cxx;cc;c;C"
+			>
 			<File
-				RelativePath="Auto_Update_Starter.cpp">
+				RelativePath="Auto_Update_Starter.cpp"
+				>
 			</File>
 			<File
-				RelativePath="BSD_Network_Interface_Monitor.cpp">
+				RelativePath="BSD_Network_Interface_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Bytes_Received_Monitor.cpp">
+				RelativePath="Bytes_Received_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Bytes_Sent_Monitor.cpp">
+				RelativePath="Bytes_Sent_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Constraint_Interpreter.cpp">
+				RelativePath="Constraint_Interpreter.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Constraint_Visitor.cpp">
+				RelativePath="Constraint_Visitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="CPU_Load_Monitor.cpp">
+				RelativePath="CPU_Load_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="FreeBSD_Network_Interface_Monitor.cpp">
+				RelativePath="FreeBSD_Network_Interface_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Linux_Network_Interface_Monitor.cpp">
+				RelativePath="Linux_Network_Interface_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Memory_Usage_Monitor.cpp">
+				RelativePath="Memory_Usage_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Group.cpp">
+				RelativePath="Monitor_Group.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Query.cpp">
+				RelativePath="Monitor_Query.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Null_Network_Interface_Monitor.cpp">
+				RelativePath="Null_Network_Interface_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Num_Threads_Monitor.cpp">
+				RelativePath="Num_Threads_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Packets_Received_Monitor.cpp">
+				RelativePath="Packets_Received_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Packets_Sent_Monitor.cpp">
+				RelativePath="Packets_Sent_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Solaris_Network_Interface_Monitor.cpp">
+				RelativePath="Solaris_Network_Interface_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Windows_Monitor.cpp">
+				RelativePath="Windows_Monitor.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Windows_Multi_Instance_Monitor.cpp">
+				RelativePath="Windows_Multi_Instance_Monitor.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hh">
+			Filter="h;hpp;hxx;hh"
+			>
 			<File
-				RelativePath="Auto_Update_Starter.h">
+				RelativePath="Auto_Update_Starter.h"
+				>
 			</File>
 			<File
-				RelativePath="BSD_Network_Interface_Monitor.h">
+				RelativePath="BSD_Network_Interface_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Bytes_Received_Monitor.h">
+				RelativePath="Bytes_Received_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Bytes_Sent_Monitor.h">
+				RelativePath="Bytes_Sent_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Constraint_Interpreter.h">
+				RelativePath="Constraint_Interpreter.h"
+				>
 			</File>
 			<File
-				RelativePath="Constraint_Visitor.h">
+				RelativePath="Constraint_Visitor.h"
+				>
 			</File>
 			<File
-				RelativePath="CPU_Load_Monitor.h">
+				RelativePath="CPU_Load_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="FreeBSD_Network_Interface_Monitor.h">
+				RelativePath="FreeBSD_Network_Interface_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Linux_Network_Interface_Monitor.h">
+				RelativePath="Linux_Network_Interface_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Memory_Usage_Monitor.h">
+				RelativePath="Memory_Usage_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Control.h">
+				RelativePath="Monitor_Control.h"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Control_export.h">
+				RelativePath="Monitor_Control_export.h"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Control_utils.h">
+				RelativePath="Monitor_Control_utils.h"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Group.h">
+				RelativePath="Monitor_Group.h"
+				>
 			</File>
 			<File
-				RelativePath="Monitor_Query.h">
+				RelativePath="Monitor_Query.h"
+				>
 			</File>
 			<File
-				RelativePath="Null_Network_Interface_Monitor.h">
+				RelativePath="Null_Network_Interface_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Num_Threads_Monitor.h">
+				RelativePath="Num_Threads_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Packets_Received_Monitor.h">
+				RelativePath="Packets_Received_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Packets_Sent_Monitor.h">
+				RelativePath="Packets_Sent_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Solaris_Network_Interface_Monitor.h">
+				RelativePath="Solaris_Network_Interface_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Windows_Monitor.h">
+				RelativePath="Windows_Monitor.h"
+				>
 			</File>
 			<File
-				RelativePath="Windows_Multi_Instance_Monitor.h">
+				RelativePath="Windows_Multi_Instance_Monitor.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Build Files"
-			Filter="mpc;mpb;mwc">
+			Filter="mpc;mpb;mwc"
+			>
 			<File
-				RelativePath="Monitor_Control.mpc">
+				RelativePath="Monitor_Control.mpc"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-				>
+					>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
-				>
-				</FileConfiguration>
+				/>
 			</File>
 		</Filter>
 	</Files>
