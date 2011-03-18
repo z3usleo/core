@@ -1068,6 +1068,29 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
+                case 14537:
+                {
+                    if (!unitTarget)
+                        return;
+
+                    if (urand(0, 99) < 10)                  //10% chance for rare effects
+                        switch(urand(1, 4))
+                        {
+                            case 1: m_caster->CastSpell(unitTarget, 31718, true); break; //enveloping winds
+                            case 2: m_caster->CastSpell(unitTarget, 118, true); break;   //polymorph target
+                            case 3: m_caster->CastSpell(m_caster, 118, true); break;     //polymorph self
+                            case 4: m_caster->CastSpell(m_caster, 8176, true); break;    //summon fellhunter
+                        }
+                    else                                    //common effects
+                        switch(urand(1, 3))
+                        {
+                            case 1: m_caster->CastSpell(unitTarget, 8401, true); break;  //fireball
+                            case 2: m_caster->CastSpell(unitTarget, 8407, true); break;  //frostbolt
+                            case 3: m_caster->CastSpell(unitTarget, 421, true); break;   //chain lightning
+
+                        }
+                    return;
+                }
                 case 15998:                                 // Capture Worg Pup
                 case 29435:                                 // Capture Female Kaliri Hatchling
                 {
@@ -2131,6 +2154,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 54171:                                 //Divine Storm
                 {
+                    // split between targets
+                    int32 bp = damage / m_UniqueTargetInfo.size();
                     m_caster->CastCustomSpell(unitTarget, 54172, &damage, NULL, NULL, true);
                     return;
                 }
@@ -7909,6 +7934,22 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         int32 power = unitTarget->GetPower(unitTarget->getPowerType());
                         unitTarget->CastCustomSpell(unitTarget, 72371, &power, &power, NULL, true);
                     }
+                    return;
+                }
+                case 72864:                                 // Death plague
+                {
+                    if (!unitTarget)
+                        return;
+
+                    if (unitTarget->GetObjectGuid() == m_caster->GetObjectGuid())
+                    {
+                        if ((int)m_UniqueTargetInfo.size() < 2)
+                            m_caster->CastSpell(m_caster, 72867, true, NULL, NULL, m_originalCasterGUID);
+                        else
+                            m_caster->CastSpell(m_caster, 72884, true);
+                    }
+                    else
+                        unitTarget->CastSpell(unitTarget, 72865, true, NULL, NULL, m_originalCasterGUID);
                     return;
                 }
             }
