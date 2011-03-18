@@ -931,6 +931,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\PossessedSummon.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\PossessedSummon.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\PoolManager.cpp"
 				>
 			</File>
