@@ -1634,7 +1634,8 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
         return NULL;
 
     Creature* pCreature = new Creature;
-    if (!pCreature->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_UNIT), map, PHASEMASK_NORMAL, entry, TEAM_NONE))
+	CreatureCreatePos pos(map, x, y, z, o, PHASEMASK_NORMAL);
+    if (!pCreature->Create(GetBgMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), pos, entry, TEAM_NONE))
     {
         sLog.outError("Can't create creature entry: %u",entry);
         delete pCreature;
@@ -1653,7 +1654,6 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 
     map->Add(pCreature);
     m_BgCreatures[type] = pCreature->GetGUID();
-
     pCreature->SetPosition(x, y, z, o);
     if (respawntime)
         pCreature->SetRespawnDelay(respawntime);
@@ -1663,7 +1663,7 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 
 bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team)
 {
-     uint32 entry = 0;
+    uint32 entry = 0;
 
     if (team == ALLIANCE)
        entry = BG_CREATURE_ENTRY_A_SPIRITGUIDE;
@@ -1690,9 +1690,10 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     pCreature->SetFloatValue(UNIT_MOD_CAST_SPEED, 1.0f);
 
     pCreature->CastSpell(pCreature, SPELL_SPIRIT_HEAL_CHANNEL, true);
- 
+
     return true;
- }
+}
+
 //some doors aren't despawned so we cannot handle their closing in gameobject::update()
 //it would be nice to correctly implement GO_ACTIVATED state and open/close doors in gameobject code
 void BattleGround::DoorClose(ObjectGuid guid)
