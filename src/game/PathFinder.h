@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,14 +25,6 @@
 #include "../recastnavigation/Detour/Include/DetourNavMeshQuery.h"
 
 class Unit;
-
-#define PRINT_DEBUG_INFO    0
-#define PATH_DEBUG(...)             \
-    do {                            \
-        if (PRINT_DEBUG_INFO)       \
-            printf(__VA_ARGS__);    \
-    } while(0)
-
 
 // 64*6.0f=384y  number_of_points*interval = max_path_len
 // this is way more than actual evade range

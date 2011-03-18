@@ -952,6 +952,7 @@
     <ClInclude Include="..\..\src\game\AuctionHouseBot.h">
       <Filter>Object</Filter>
     </ClInclude>
+
     <ClInclude Include="..\..\src\game\vmap\BIH.h">
       <Filter>vmaps</Filter>
     </ClInclude>
