@@ -7504,6 +7504,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, m_spellInfo->EffectBasePoints[eff_idx]+1, true);
                     break;
                 }
+                case 52481:
                 case 52479:                                 // The Gift That Keeps On Giving - trigger Scarlet Miner Ghoul Transform
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER || unitTarget->GetTypeId() == TYPEID_PLAYER)
