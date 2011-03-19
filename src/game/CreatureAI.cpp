@@ -29,7 +29,7 @@ void CreatureAI::AttackedBy( Unit* attacker )
 {
     /// TEST THIS OUT after fixing 
     ///vehicle dont have threat list, so this is unnecessary, because it calls move chase 
-    if(m_creature->IsVehicle()) //TESTING 
+    if(m_creature->GetVehicle()) //TESTING 
          return;  // TESTING
 	
     if(!m_creature->getVictim())
