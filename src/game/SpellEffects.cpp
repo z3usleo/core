@@ -2508,8 +2508,15 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if(!unitTarget) 
                        return; 
  
-                    uint32 spellId = urand(0,1) ? 62251 : 62252; 
-                    m_caster->CastSpell(unitTarget, spellId, true); 
+                     uint32 spellId = urand(0,1) ? 62251 : 62252; 
+                     m_caster->CastSpell(unitTarget, spellId, true); 
+                     return; 
+                }
+                case 62217: 
+                case 62922:                  // Unstable Energy - Unstable Sun Beam remove part 
+                { 
+                    if(m_caster) 
+                    m_caster->RemoveAurasDueToSpell(m_spellInfo->EffectBasePoints[eff_idx] + 1); 
                     return; 
                 }
                 case 70769:                                 // Divine Storm!
