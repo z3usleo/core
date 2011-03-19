@@ -936,7 +936,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                         return SPELL_AURA_PROC_FAILED;
 
                     triggered_spell_id = 50454;
-                    basepoints[0] = int32(damage*1.69);
+                    basepoints[0] = int32(damage);
                     target = owner;
                     break;
                 }
@@ -4020,6 +4020,20 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                     return SPELL_AURA_PROC_FAILED;
                 basepoints[0] = triggerAmount * damage / 100;
                 trigger_spell_id = 50475;
+            }
+            // Bloodworms
+            else if (auraSpellInfo->Id == 49543)
+            {
+                if (GetTypeId() != TYPEID_PLAYER)
+                    return SPELL_AURA_PROC_FAILED;
+
+                // HACK: Remove cooldown of proc spell, for some reason it has a 300s cd
+                ((Player*)this)->RemoveSpellCooldown(trigger_spell_id);
+
+                // HACK: Random basepoints. Probably the basepoints of
+                // SPELL_AURA_PROC_TRIGGER_SPELL_WITH_VALUE have to be randomized on every proc
+                basepoints[0] = urand(2, 4);
+                break;
             }
             break;
         }
