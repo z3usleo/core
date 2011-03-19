@@ -1626,8 +1626,14 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 38794:                                 // Murmur's Touch (h)
                 case 50988:                                 // Glare of the Tribunal (Halls of Stone)
                 case 59870:                                 // Glare of the Tribunal (h) (Halls of Stone)
+                case 68950:                                 // Fear (ICC: Forge of Souls)
+                case 63018:                                 // XT002's Light Bomb
+                case 65121:                                 // XT002's Light Bomb (h)
+                case 63024:                                 // XT002's Gravitiy Bomb
+                case 64234:                                 // XT002's Gravitiy Bomb (h)
                 case 61916:                                 // Lightning Whirl (10 man)
                 case 63482:                                 // Lightning Whirl (25 man)
+                case 55479:                                 // Force Obedience (Naxxramas - Razovius encounter)
                 case 66001:                                 // Touch of Darkness
                 case 67281:
                 case 67282:
@@ -1637,12 +1643,15 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67296:
                 case 67297:
                 case 67298:
-                case 68950:                                 // Fear
+                case 63387:                                 // Rapid Burst 
+                case 64531:                                 // Rapid Burst
+                case 71340:                                 // Pact of darkfallen (hack for script work)				
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
                 case 66013:                                 // Penetrating Cold (10 man)
                 case 68509:                                 // Penetrating Cold (10 man heroic)
+                case 69278:                                 // Gas spore - 10
                     unMaxTargets = 2;
                     break;
                 case 28796:                                 // Poison Bolt Volley
@@ -1650,7 +1659,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 31298:                                 // Sleep
                 case 51904:                                 // Limiting the count of Summoned Ghouls
                 case 54522:
+                case 61693:                                 // Arcane Storm (Malygos) (N)
                     unMaxTargets = 3;
+                    break;
+                case 71221:                                 // Gas spore - 25
+                    unMaxTargets = 4;
                     break;
                 case 30843:                                 // Enfeeble TODO: exclude top threat target from target selection
                 case 42005:                                 // Bloodboil TODO: need to be 5 targets(players) furthest away from caster
@@ -1659,6 +1672,8 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67700:                                 // Penetrating Cold (25 man)
                 case 68510:                                 // Penetrating Cold (25 man, heroic)
                     unMaxTargets = 5;
+                case 61694:                                 // Arcane Storm(H) (25 man) (Malygos)
+                    unMaxTargets = 7;
                     break;
                 case 54098:                                 // Poison Bolt Volley (h)
                 case 54835:                                 // Curse of the Plaguebringer (h)
@@ -1667,6 +1682,14 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 25991:                                 // Poison Bolt Volley (Pincess Huhuran)
                     unMaxTargets = 15;
                     break;
+                case 62240:                                 // Solar Flare 
+                case 62920:                                 // Solar Flare (h) 
+                { 
+                    if(Aura *pAura = m_caster->GetAura(62251, EFFECT_INDEX_0)) 
+                    unMaxTargets = pAura->GetStackAmount(); 
+                    else unMaxTargets = 1; 
+                    break; 
+                }
                 case 69075:                                 // Bone Storm
                 case 70834:                                 // Bone Storm
                 case 70835:                                 // Bone Storm
