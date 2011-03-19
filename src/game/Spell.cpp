@@ -3274,10 +3274,6 @@ void Spell::cast(bool skipCheck)
         if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
             const_cast<SpellEntry*>(spellInfo)->Attributes |= SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY;
 
-    if (m_spellInfo->Id == 70901)                           // Dark Empowerment - fix target flag in dbc
-        if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
-			const_cast<SpellEntry*>(spellInfo)->EffectImplicitTargetA[0] = TARGET_CHAIN_DAMAGE;
-
     // different triggred (for caster) and precast (casted before apply effect to target) cases
     switch(m_spellInfo->SpellFamilyName)
     {
