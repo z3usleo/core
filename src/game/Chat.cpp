@@ -227,6 +227,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "spellcoefs",     SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleDebugSpellCoefsCommand,          "", NULL },
         { "uws",            SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugUpdateWorldStateCommand,    "", NULL },
 		{ "entervehicle",   SEC_GAMEMASTER,     false, &ChatHandler::HandleDebugEnterVehicleCommand,        "", NULL },
+        { "setvehicleid",   SEC_GAMEMASTER,     false, &ChatHandler::HandleDebugEnterVehicleCommand,        "", NULL },
         { NULL,             0,                  false, NULL,                                                "", NULL }
     };
 
