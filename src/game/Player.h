@@ -2304,8 +2304,31 @@ class MANGOS_DLL_SPEC Player : public Unit
         void ChangeSpeakTime(int utime);
 
         /*********************************************************/
-        /*** REFER-A-FRIEND SYSTEM ***/
+        /***             REFER-A-FRIEND SYSTEM                 ***/
         /*********************************************************/
+
+        // Char datas...
+        bool m_jail_warning;
+        bool m_jail_amnestie;
+        bool m_jail_isjailed;           // Is this player jailed?
+        std::string m_jail_char;        // Name of jailed char
+        uint32 m_jail_guid;             // guid of the jailed char
+        uint32 m_jail_release;          // When is the player a free man/woman?
+        std::string m_jail_reason;      // Why was the char jailed?
+        uint32 m_jail_times;            // How often was the player jailed?
+        uint32 m_jail_amnestietime;
+        uint32 m_jail_gmacc;            // Used GM acc
+        std::string m_jail_gmchar;      // Used GM char
+        std::string m_jail_lasttime;    // Last jail time
+        uint32 m_jail_duration;         // Duration of the jail
+        // Load / save functions...
+        void _LoadJail(void);           // Loads the jail data
+        void _SaveJail(void);           // Saves the jail data
+
+        /*********************************************************/
+        /***             REFER-A-FRIEND SYSTEM                 ***/
+        /*********************************************************/
+
         void SendReferFriendError(ReferAFriendError err, Player * target = NULL);
         ReferAFriendError GetReferFriendError(Player * target, bool summon);
         void AccessGrantableLevel(ObjectGuid guid) { m_curGrantLevelGiverGuid = guid; }

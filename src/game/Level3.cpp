@@ -54,6 +54,13 @@
 #include "CreatureEventAIMgr.h"
 #include "DBCEnums.h"
 
+bool ChatHandler::HandleJailReloadCommand(char* arg)
+{
+    sObjectMgr.LoadJailConf();
+    SendSysMessage(LANG_JAIL_RELOAD);
+    return true;
+}
+
 //reload commands
 bool ChatHandler::HandleReloadAllCommand(char* /*args*/)
 {

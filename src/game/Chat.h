@@ -594,6 +594,12 @@ class ChatHandler
         bool HandleQuitCommand(char* args);
         bool HandleIRCpmCommand(char* args);
 
+        // Jail by WarHead
+        bool HandleJailCommand(char* args);
+        bool HandleJailInfoCommand(char* args);
+        bool HandleUnJailCommand(char* args);
+        bool HandleJailReloadCommand(char* args);
+
         bool HandleMmapPathCommand(char* args);
         bool HandleMmapLocCommand(char* args);
         bool HandleMmapLoadedTilesCommand(char* args);
