@@ -12110,6 +12110,11 @@ SpellAuraHolder* Unit::GetSpellAuraHolder (uint32 spellid, uint64 casterGUID)
     return NULL;
 }
 
+void Unit::RemoveUnitFromHostileRefManager(Unit* p_unit) 
+{ 
+   getHostileRefManager().deleteReference(p_unit); 
+}
+
 void Unit::_AddAura(uint32 spellID, uint32 duration)
 {
     SpellEntry const *spellInfo = sSpellStore.LookupEntry( spellID );

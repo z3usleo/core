@@ -1298,8 +1298,16 @@ void Aura::TriggerSpell()
                         triggerTarget->CastCustomSpell(triggerTarget, 29879, &bpDamage, NULL, NULL, true, NULL, this, casterGUID);
                         return;
                     }
-//                    // Detonate Mana
-//                    case 27819: break;
+//                  // Detonate Mana (Kel'Thuzad in Naxxramas) 
+                    case 27819: 
+                    { 
+                        if (target->getPowerType() != POWER_MANA) 
+                            return; 
+                        int32 bpDamage = target->GetMaxPower(POWER_MANA); 
+                        target->CastCustomSpell(target, 27820, &bpDamage, 0, 0, true); 
+                        target->ModifyPower(POWER_MANA, -2000); 
+                        return; 
+                    }
 //                    // Controller Timer
 //                    case 28095: break;
                     case 28096:                                     // Stalagg Chain 
@@ -1974,6 +1982,19 @@ void Aura::TriggerSpell()
             case 48094:                                      // Intense Cold
                 triggerTarget->CastSpell(triggerTarget, trigger_spell_id, true, NULL, this);
                 return;
+            // Static Charge (Lady Vashj in Serpentshrine Cavern) 
+            case 38280: 
+            // Static Overload normal (Ionar in Halls of Lightning) 
+            case 52658: 
+            // Static Overload heroic (Ionar in Halls of Lightning) 
+            case 59795: 
+            case 53563:                                     // Beacon of Light 
+            // Searing Light (normal&heroic) (XT-002 in Ulduar) 
+            case 63018: 
+            case 65121: 
+            // Gravity Bomb (normal&heroic) (XT-002 in Ulduar) 
+            case 63024: 
+            case 64234:
             case 53563:                                     // Beacon of Light
                 // original caster must be target (beacon)
                 target->CastSpell(target, trigger_spell_id, true, NULL, this, target->GetGUID());
@@ -5577,6 +5598,22 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
             if (apply && !loading && caster)
                 m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(RANGED_ATTACK) * 14 / 100);
             break;
+        }
+        case SPELLFAMILY_DEATHKNIGHT: 
+        { 
+            Unit* pCaster = GetCaster(); 
+ 
+            if (apply) 
+            { 
+                // Summon Gargoyle 
+                if (GetId() == 49206) 
+                { 
+                    if (pCaster) 
+                         if (Pet *pGargoyle = pCaster->FindGuardianWithEntry(GetSpellProto()->EffectMiscValue[EFFECT_INDEX_0]) ) 
+                            if (pGargoyle->getVictim() != target) 
+                                pGargoyle->AI()->AttackStart(target); 
+                } 
+            } 
         }
     }
 

@@ -389,6 +389,12 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         damage = unitTarget->GetMaxHealth() / 2;
                         break;
                     }
+                    // Gargoyle Strike 
+                    case 51963: 
+                    { 
+                        damage += m_caster->GetTotalAttackPowerValue(BASE_ATTACK); 
+                        break; 
+                    }
                     // Explode
                     case 47496:
                     {
@@ -992,6 +998,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 24085, true);
                     return;
                 }
+                case 69922:                                 // Temper Quel'Delar 
+                { 
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER) 
+                        return; 
+ 
+                    m_caster->CastSpell(m_caster,69956,true,NULL); 
+                    return; 
+                }
                 case 8063:                                  // Deviate Fish
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -1471,6 +1485,45 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, spell_id, true, NULL);
                     return;
                 }
+                case 33655: // Q: Mission: Gateways Murketh and Shaadraz 
+                { 
+                   if( m_caster->GetTypeId() != TYPEID_PLAYER ) 
+                       return; 
+                   if( !m_caster->IsTaxiFlying() ) 
+                       return; 
+ 
+                   if( m_caster->GetDistance( -145.554f, 1511.28f, 34.3641f ) < 90 ) 
+                       ((Player*)m_caster)->KilledMonsterCredit( 19291, m_caster->GetGUID()); 
+                   if( m_caster->GetDistance( -304.408f, 1524.45f, 37.9685f ) < 90 ) 
+                       ((Player*)m_caster)->KilledMonsterCredit( 19292, m_caster->GetGUID()); 
+                   return; 
+                } 
+                case 34665:                                 //Administer Antidote 
+                { 
+                    if (!unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER ) 
+                        return; 
+ 
+                    // Spell has scriptable target but for sure. 
+                    if (unitTarget->GetTypeId() != TYPEID_UNIT) 
+                        return; 
+ 
+                    uint32 health = unitTarget->GetHealth(); 
+                    float x, y, z, o; 
+ 
+                    unitTarget->GetPosition(x, y, z); 
+                    o = unitTarget->GetOrientation(); 
+                    ((Creature*)unitTarget)->ForcedDespawn(); 
+ 
+                    if (Creature* summon = m_caster->SummonCreature(16992, x, y, z, o,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,180000)) 
+                    { 
+                        summon->SetHealth(health); 
+                        ((Player*)m_caster)->RewardPlayerAndGroupAtEvent(16992, summon); 
+ 
+                        if (summon->AI()) 
+                            summon->AI()->AttackStart(m_caster); 
+                    } 
+                    return; 
+                }
                 case 35745:                                 // Socrethar's Stone
                 {
                     uint32 spell_id;
@@ -1675,6 +1728,22 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(m_caster, 45456, true);
 
                     break;
+                }
+                case 22096:                                 // Ebon Blade Prisoner Credit 
+                 { 
+                    if(m_caster->GetTypeId() == TYPEID_PLAYER) 
+                        ((Player*)m_caster)->KilledMonsterCredit(30186); 
+ 
+                    return; 
+                } 
+                case 45692:                                 // Use Tuskarr Torch (for Quest: Burn in Effigy) 
+                { 
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT) 
+                        return; 
+                    // let them burn!(flame spell could be wrong one, anyway visual effect is correct) 
+                    unitTarget->CastSpell(unitTarget, 64561, true); 
+                    ((Creature*)unitTarget)->ForcedDespawn(15000); 
+                    return; 
                 }
                 case 45980:                                 // Re-Cursive Transmatter Injection
                 {
@@ -1884,6 +1953,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
 
                     return;
+                }
+                case 48679:                                 // Banshee's Magic Mirror 
+                { 
+                    if (!unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER) 
+                        return; 
+ 
+                    unitTarget->CastSpell(m_caster, 48648, true); 
+                    return; 
                 }
                 case 49357:                                 // Brewfest Mount Transformation
                 {
@@ -4346,6 +4423,14 @@ void Spell::EffectHeal(SpellEffectIndex /*eff_idx*/)
             }
         }
 
+        //Alchemist's Stone effect 
+        if (m_spellInfo->SpellFamilyName == SPELLFAMILY_POTION) 
+        { 
+           SpellAuraHolder* alcStoneEff = caster->GetSpellAuraHolder(17619); 
+           if(alcStoneEff) 
+           addhealth *= 1.40f; 
+        } 
+
         addhealth = caster->SpellHealingBonusDone(unitTarget, m_spellInfo, addhealth, HEAL);
         addhealth = unitTarget->SpellHealingBonusTaken(caster, m_spellInfo, addhealth, HEAL);
 
@@ -4657,6 +4742,17 @@ void Spell::EffectEnergize(SpellEffectIndex eff_idx)
 
     if(unitTarget->GetMaxPower(power) == 0)
         return;
+
+    //Alechmist's Stone effect 
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_POTION) 
+    { 
+       if (power == POWER_MANA) 
+       { 
+          SpellAuraHolder* alcStoneEff = caster->GetSpellAuraHolder(17619); 
+          if (alcStoneEff) 
+             damage *= 1.40f; 
+       } 
+    }
 
     m_caster->EnergizeBySpell(unitTarget, m_spellInfo->Id, damage, power);
 
@@ -7100,6 +7196,70 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastCustomSpell(unitTarget, 28375, &damage, NULL, NULL, true, NULL, NULL, m_originalCasterGUID); 
                     return; 
                 }
+                case 29126:                                 // Cleansing Flames Darnassus 
+                { 
+                    if (!unitTarget) 
+                        return; 
+  
+                    unitTarget->CastSpell(unitTarget, 29099, true); // Create Flame of Darnassus 
+                    break; 
+                } 
+                case 29135:                                 // Cleansing Flames Ironforge 
+                { 
+                    if (!unitTarget) 
+                        return; 
+ 
+                    unitTarget->CastSpell(unitTarget, 29102, true); // Create Flame of Ironforge 
+                    break; 
+                } 
+                case 29136:                                 // Cleansing Flames Orgrimmar 
+                { 
+                    if (!unitTarget) 
+                        return; 
+  
+                    unitTarget->CastSpell(unitTarget, 29130, true); // Create Flame of Orgrimmar 
+                    break; 
+                } 
+                case 29137:                                 // Cleansing Flames Stormwind 
+                { 
+                    if (!unitTarget) 
+                        return; 
+  
+                    unitTarget->CastSpell(unitTarget, 29101, true); // Create Flame of Stormwind 
+                    break; 
+                } 
+                case 29138:                                 // Cleansing Flames Thunder Bluff 
+                { 
+                    if (!unitTarget) 
+                        return; 
+ 
+                    unitTarget->CastSpell(unitTarget, 29132, true); // Create Flame of Thunder Bluff 
+                    break; 
+                } 
+                case 29139:                                 // Cleansing Flames Undercity 
+                { 
+                    if (!unitTarget) 
+                        return; 
+ 
+                    unitTarget->CastSpell(unitTarget, 29133, true); // Create Flame of The Undercity 
+                    break; 
+                } 
+                case 46671:                                 // Cleansing Flames Exodar 
+                { 
+                    if (!unitTarget) 
+                        return; 
+  
+                    unitTarget->CastSpell(unitTarget, 46690, true); // Create Flame of the Exodar 
+                    break; 
+                } 
+                case 46672:                                 // Cleansing Flames Silvermoon 
+                { 
+                    if (!unitTarget) 
+                        return; 
+  
+                    unitTarget->CastSpell(unitTarget, 46689, true); // Create Flame of The Silvermoon 
+                    break; 
+                }
                 case 29830:                                 // Mirren's Drinking Hat
                 {
                     uint32 item = 0;
@@ -7262,6 +7422,17 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     }
 
                     return;
+                }
+                case 23301: // Ebon Blade Banner 
+                { 
+                    if(m_caster->GetTypeId() != TYPEID_PLAYER) 
+                        return; 
+                    if(Creature* pTemp = (Creature*)unitTarget) 
+                        if(!pTemp->isAlive()) 
+                        { 
+                            ((Player*)m_caster)->KilledMonsterCredit(30220); 
+                            pTemp->ForcedDespawn(); 
+                        } 
                 }
                 case 44876:                                 // Force Cast - Portal Effect: Sunwell Isle
                 {
@@ -7729,6 +7900,12 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, m_spellInfo->EffectBasePoints[eff_idx]+1, true);
                     break;
                 }
+                case 52124:                                 // Sky Darkener Assault 
+                { 
+                    if (unitTarget && unitTarget != m_caster) 
+                        m_caster->CastSpell(unitTarget, 52125, false); 
+                    break; 
+                } 
                 case 52694:                                 // Recall Eye of Acherus
                 {
                     if (!m_caster || m_caster->GetTypeId() != TYPEID_UNIT)
@@ -9110,8 +9287,16 @@ void Spell::DoSummonTotem(SpellEffectIndex eff_idx, uint8 slot_dbc)
 
     if (damage)                                             // if not spell info, DB values used
     {
-        pTotem->SetMaxHealth(damage);
-        pTotem->SetHealth(damage);
+        if (pTotem->GetEntry() == 10467) // Mana Tide inherits 10% of owner health 
+        { 
+            pTotem->SetMaxHealth(m_caster->GetMaxHealth()*0.1); 
+            pTotem->SetHealth(m_caster->GetMaxHealth()*0.1); 
+        } 
+        else 
+        { 
+            pTotem->SetMaxHealth(damage); 
+            pTotem->SetHealth(damage); 
+        }
     }
 
     pTotem->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
