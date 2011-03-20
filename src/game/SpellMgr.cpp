@@ -2031,6 +2031,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // Dragonmaw Illusion, Blood Elf Illusion, Human Illusion, Illidari Agent Illusion, Scarlet Crusade Disguise
             if(spellInfo_1->SpellIconID == 1691 && spellInfo_2->SpellIconID == 1691)
                 return false;
+
+			// Drums of the Wild and Gift of the Wild
+			if( (spellInfo_1->SpellIconID == 2435 && spellInfo_2->SpellIconID == 123) ||
+				(spellInfo_2->SpellIconID == 2435 && spellInfo_1->SpellIconID == 123) )
+				return true;
             break;
         case SPELLFAMILY_MAGE:
             if( spellInfo_2->SpellFamilyName == SPELLFAMILY_MAGE )
@@ -2072,6 +2077,15 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             if (spellInfo_1->SpellIconID == 125 && spellInfo_2->Id == 18820)
                 return false;
 
+			// Fire Ward and Fire Shield (multi-family check)
+			if ((spellInfo_1->SpellIconID == 16) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x0000000000000008)) &&
+				(spellInfo_2->SpellIconID == 16) && (spellInfo_2->SpellFamilyName == SPELLFAMILY_WARLOCK))
+				return false;
+
+			// Hot Streak and Firestarter
+			if( spellInfo_1->EffectSpellClassMaskC[0] == 262144 && spellInfo_2->EffectSpellClassMaskC[0] == 262144)
+				return false;
+
             break;
         case SPELLFAMILY_WARLOCK:
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_WARLOCK)
@@ -2109,6 +2123,12 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // Detect Invisibility and Mana Shield (multi-family check)
             if (spellInfo_1->Id == 132 && spellInfo_2->SpellIconID == 209 && spellInfo_2->SpellVisual[0] == 968)
                 return false;
+
+			// Fire Shield and Fire Ward (multi-family check)
+			if ((spellInfo_1->SpellIconID == 16) &&
+				(spellInfo_2->SpellIconID == 16) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x0000000000000008)))
+				return false;
+
             break;
         case SPELLFAMILY_WARRIOR:
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_WARRIOR)
@@ -2128,6 +2148,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     ((spellInfo_2->SpellFamilyFlags & UI64LIT(0x800000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x800000))))
                     return true;
             }
+
+			// Flurry and Rip stacking
+			if(spellInfo_1->SpellIconID == 108 && spellInfo_2->SpellIconID == 108)
+				return false;
 
             // Hamstring -> Improved Hamstring (multi-family check)
             if ((spellInfo_1->SpellFamilyFlags & UI64LIT(0x2)) && spellInfo_2->Id == 23694)
@@ -2232,6 +2256,15 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellInfo_2->Id == 22842 && spellInfo_1->Id == 62606))
                     return false;
             }
+
+			// Flurry and Rip stacking
+			if(spellInfo_1->SpellIconID == 108 && spellInfo_2->SpellIconID == 108)
+				return false;
+
+			// Drums of the Wild and Gift of the Wild
+			if( (spellInfo_1->SpellIconID == 2435 && spellInfo_2->SpellIconID == 123) ||
+				(spellInfo_2->SpellIconID == 2435 && spellInfo_1->SpellIconID == 123) )
+				return true;
 
             // Leader of the Pack and Scroll of Stamina (multi-family check)
             if (spellInfo_1->Id == 24932 && spellInfo_2->SpellIconID == 312 && spellInfo_2->SpellVisual[0] == 216)
@@ -2347,6 +2380,18 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if (spellInfo_2->Id == 67480 && spellInfo_1->Id == 20911)
                     return false;
 
+				// Seal of Command and Frostforged Champion (multi-family check)
+				if (spellInfo_1->Id == 72412 && spellInfo_2->SpellIconID == 561)
+					return false;
+
+				// Hardened Skin and Devotion Aura (multi-family check)
+				if (spellInfo_1->Id == 71586 && spellInfo_2->SpellIconID == 291)
+					 return false;
+
+				// Aegis and Holy Shield (multi-family check)
+				if (spellInfo_1->Id == 67631 && spellInfo_2->SpellIconID == 453)
+					return false;
+
                 // Inner Fire and Consecration
                 if(spellInfo_2->SpellFamilyName == SPELLFAMILY_PRIEST)
                     if(spellInfo_1->SpellIconID == 51 && spellInfo_2->SpellIconID == 51)
@@ -2384,6 +2429,22 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // *Seal of Command and Band of Eternal Champion (multi-family check)
             if (spellInfo_1->SpellIconID==561 && spellInfo_1->SpellVisual[0]==7992 && spellId_2 == 35081)
                 return false;
+
+			// Seal of Command and Frostforged Champion (multi-family check)
+			if( spellInfo_2->SpellFamilyName == SPELLFAMILY_GENERIC )
+			{
+				// Seal of Command and Frostforged Champion (multi-family check)
+				if( spellInfo_1->SpellIconID == 561 && spellInfo_2->Id == 72412 )
+					return false;
+
+				// Hardened Skin and Devotion Aura (multi-family check)
+				if( spellInfo_1->SpellIconID == 291 && spellInfo_2->Id == 71586 )
+					return false;
+
+				// Aegis and Holy Shield (multi-family check)
+				if( spellInfo_1->SpellIconID == 453 && spellInfo_2->Id == 67631 )
+					return false;
+			}
             break;
 
         case SPELLFAMILY_SHAMAN:
