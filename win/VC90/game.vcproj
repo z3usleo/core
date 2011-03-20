@@ -1207,10 +1207,10 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\AuctionHouseBot.cpp">
+				RelativePath="..\..\src\game\AuctionHouseBot\AuctionHouseBot.cpp">
 			</File>
 			<File
-				RelativePath="..\..\src\game\AuctionHouseBot.h">
+				RelativePath="..\..\src\game\AuctionHouseBot\AuctionHouseBot.h">
 			</File>
 			<File
 				RelativePath="..\..\src\game\AuctionHouseMgr.cpp"
