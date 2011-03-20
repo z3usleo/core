@@ -7692,10 +7692,6 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto, uint8 slot, bool appl
                 ApplyModInt32Value(PLAYER_FIELD_MOD_TARGET_RESISTANCE, -int32(val), apply);
                 m_spellPenetrationItemMod += apply ? val : -val;
                 break;
-            case ITEM_MOD_HEALTH_REGEN: 
-                ((Player*)this)->ApplyHealthRegenBonus(enchant_amount, apply); 
-                sLog.outDebug("+ %u HEALTH_REGENERATION", enchant_amount); 
-                break;
             case ITEM_MOD_BLOCK_VALUE:
                 HandleBaseModValue(SHIELD_BLOCK_VALUE, FLAT_MOD, float(val), apply);
                 break;
