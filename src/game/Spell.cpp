@@ -2507,6 +2507,9 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
         case TARGET_IN_FRONT_OF_CASTER:
         {
             bool inFront = m_spellInfo->SpellVisual[0] != 3879;
+			// Pound (not turn caster to target)
+			if (m_spellInfo->SpellIconID == 66)
+				m_caster->SetOrientation(m_castOrientation);
             FillAreaTargets(targetUnitMap, m_caster->GetPositionX(), m_caster->GetPositionY(), radius, inFront ? PUSH_IN_FRONT : PUSH_IN_BACK, SPELL_TARGETS_AOE_DAMAGE);
             break;
         }
@@ -3514,7 +3517,7 @@ void Spell::cast(bool skipCheck)
     InitializeDamageMultipliers();
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
-    if (m_spellInfo->speed > 0.0f)
+    if (m_spellInfo->speed > 0.0f || m_spellInfo->Id == 14157)                // hack for Ruthlessness
     {
 
         // Remove used for cast item if need (it can be already NULL after TakeReagents call
