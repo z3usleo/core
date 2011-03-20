@@ -1948,6 +1948,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void UpdateArmorPenetration();
         void ApplyManaRegenBonus(int32 amount, bool apply);
         void UpdateManaRegen();
+        void ApplyHealthRegenBonus(int32 amount, bool apply);
 
         const uint64& GetLootGUID() const { return m_lootGuid.GetRawValue(); }
         void SetLootGUID(ObjectGuid const& guid) { m_lootGuid = guid; }
@@ -2690,6 +2691,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint16 m_baseSpellPower;
         uint16 m_baseFeralAP;
         uint16 m_baseManaRegen;
+        uint16 m_baseHealthRegen;
         float m_armorPenetrationPct;
         int32 m_spellPenetrationItemMod;
 
