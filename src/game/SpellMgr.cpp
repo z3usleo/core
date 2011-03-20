@@ -1937,6 +1937,19 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     if (spellInfo_1->SpellIconID == 3559 && spellInfo_2->SpellIconID == 3559)
                         return false;
 
+					// Flame Tsunami Visual and Damage
+					if ((spellInfo_1->Id == 57492 && spellInfo_2->Id == 57494) ||
+						(spellInfo_2->Id == 57492 && spellInfo_1->Id == 57494))
+						return false;
+
+					// Sextant of Unstable Currents and Band of the Eternal Sage
+					if( spellInfo_1->SpellIconID == 502 && spellInfo_2->SpellIconID == 502 )
+						return false;
+
+					// Lightning Speed and Crushing Waves
+					if( spellInfo_1->SpellIconID == 2010 && spellInfo_2->SpellIconID == 2010 )
+						return false;
+
                     // Vigilance and Damage Reduction (Vigilance triggered spell)
                     if (spellInfo_1->SpellIconID == 2834 && spellInfo_2->SpellIconID == 2834)
                         return false;
