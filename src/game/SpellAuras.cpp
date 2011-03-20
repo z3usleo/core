@@ -1321,8 +1321,11 @@ void Aura::TriggerSpell()
 //                    case 28114: break;
 //                    // Communique Timer, camp
 //                    case 28346: break;
-//                    // Icebolt
-//                    case 28522: break;
+//                    // Icebolt (Sapphiron - Naxxramas) 
+                    case 28522:                      // should apply some kind of iceblock visual aura 
+                        if (!target->HasAura(45776)) // dunno if triggered spell id is correct 
+                            trigger_spell_id = 45776; 
+                        break;
 //                    // Silithyst
 //                    case 29519: break;
                     case 29528:                             // Inoculate Nestlewood Owlkin
@@ -5408,6 +5411,10 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                     target->CastSpell(target, 32612, true, NULL, this);
 
                 return;
+            case 28522:                                     // Icebolt (Naxxramas: Sapphiron) 
+                if (target->HasAura(45776))                 // Should trigger/remove some kind of iceblock 
+                    target->RemoveAurasDueToSpell(45776);   // not sure about ice block spell id 
+                return;
             case 42783:                                     // Wrath of the Astrom...
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE && GetEffIndex() + 1 < MAX_EFFECT_INDEX)
                     target->CastSpell(target, GetSpellProto()->CalculateSimpleValue(SpellEffectIndex(GetEffIndex()+1)), true);
@@ -5741,6 +5748,15 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
         // Parasitic Shadowfiend - handle summoning of two Shadowfiends on DoT expire
         if(spellProto->Id == 41917)
             target->CastSpell(target, 41915, true);
+
+        // Deathbloom (Naxxramas - Loatheb normal) 
+        if (m_spellProto->Id == 29865) 
+            m_target->CastSpell(m_target, 55594, true); 
+ 
+        // Deathbloom (Naxxramas - Loatheb heroic) 
+        if (m_spellProto->Id == 55053) 
+            m_target->CastSpell(m_target, 55601, true);
+
         else if (spellProto->Id == 74562) // SPELL_FIERY_COMBUSTION - Ruby sanctum boss Halion
             target->CastSpell(target, 74607, true, NULL, NULL, GetCasterGUID());
         else if (spellProto->Id == 74792) // SPELL_SOUL_CONSUMPTION - Ruby sanctum boss Halion
@@ -7281,6 +7297,16 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                 data << end_time*IN_MILLISECONDS;
                 plr->SendDirectMessage(&data);
             }
+        }
+        // Shield of Runes (normal) (Runemaster Molgeim, Assembly of Iron encounter in Ulduar) 
+        else if (target && spellProto->Id == 62274 && m_removeMode == AURA_REMOVE_BY_SHIELD_BREAK) 
+        { 
+            target->CastSpell(target, 62277, true); 
+        } 
+        // Shield of Runes (heroic) (Runemaster Molgeim, Assembly of Iron encounter in Ulduar) 
+        else if (caster && spellProto->Id == 63489 && m_removeMode == AURA_REMOVE_BY_SHIELD_BREAK) 
+        { 
+            target->CastSpell(target, 63967, true); 
         }
     }
 }
@@ -9280,7 +9306,7 @@ void SpellAuraHolder::SetStackAmount(uint32 stackAmount)
                 int32 bp = aur->GetBasePoints();
                 int32 amount = m_stackAmount * caster->CalculateSpellDamage(target, m_spellProto, SpellEffectIndex(i), &bp);
                 // Reapply if amount change
-                if (amount != aur->GetModifier()->m_amount)
+                if (amount != aur->GetModifier()->m_amount || GetId() == 28832 || GetId() == 28833 || GetId() == 28834 || GetId() == 28835)
                 {
                     aur->ApplyModifier(false, true);
                     aur->GetModifier()->m_amount = amount;
@@ -9484,6 +9510,28 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                 {
                     spellId1 = 70871;
                     break;
+                }
+                case 29865:                                 // Deathbloom (10 man) 
+                { 
+                    if (!apply && m_removeMode == AURA_REMOVE_BY_EXPIRE) 
+                    { 
+                        cast_at_remove = true; 
+                        spellId1 = 55594; 
+                    } 
+                    else 
+                        return; 
+                    break; 
+                } 
+                case 55053:                                 // Deathbloom (25 man) 
+                { 
+                    if (!apply && m_removeMode == AURA_REMOVE_BY_EXPIRE) 
+                    { 
+                        cast_at_remove = true; 
+                        spellId1 = 55601; 
+                    } 
+                    else 
+                        return; 
+                    break; 
                 }
                 case 71905:                                 // Soul Fragment
                 {
