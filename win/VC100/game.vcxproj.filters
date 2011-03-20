@@ -31,6 +31,9 @@
     <Filter Include="OutdoorPvP">
       <UniqueIdentifier>{bdba3b28-8f9a-4c80-973e-f385fdeab374}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AuctionHouseBot">
+      <UniqueIdentifier>{8450f8a7-a394-4e7c-9d23-63b5d6da8a9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\game\AccountMgr.cpp">
@@ -481,9 +484,6 @@
     <ClCompile Include="..\..\src\game\VehicleHandler.cpp">
       <Filter>Object</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\game\AuctionHouseBot.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\game\playerbot\PlayerbotAI.cpp">
       <Filter>World/Handlers</Filter>
     </ClCompile>
@@ -597,6 +597,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\game\OutdoorPvPZM.cpp">
       <Filter>OutdoorPvP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.cpp">
+      <Filter>AuctionHouseBot</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1015,9 +1018,6 @@
     <ClInclude Include="..\..\src\game\ChatLog.h">
       <Filter>Object</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\game\AuctionHouseBot.h">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\game\playerbot\PlayerbotAI.h">
       <Filter>World/Handlers</Filter>
     </ClInclude>
@@ -1137,6 +1137,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\game\OutdoorPvPZM.h">
       <Filter>OutdoorPvP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.h">
+      <Filter>AuctionHouseBot</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

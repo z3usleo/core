@@ -1574,8 +1574,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder);
 
-        bool MinimalLoadFromDB(uint64 lowguid);
-
         static uint32 GetZoneIdFromDB(ObjectGuid guid);
         static uint32 GetLevelFromDB(ObjectGuid guid);
         static bool   LoadPositionFromDB(ObjectGuid guid, uint32& mapid, float& x,float& y,float& z,float& o, bool& in_flight);
@@ -1587,8 +1585,12 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SaveToDB();
         void SaveInventoryAndGoldToDB();                    // fast save function for item/money cheating preventing
         void SaveGoldToDB();
+		void SaveDataFieldToDB();
+		static bool SaveValuesArrayInDB(Tokens const& data,uint64 guid);
         static void SetUInt32ValueInArray(Tokens& data,uint16 index, uint32 value);
         static void SetFloatValueInArray(Tokens& data,uint16 index, float value);
+		static void SetUInt32ValueInDB(uint16 index, uint32 value, uint64 guid);
+		static void SetFloatValueInDB(uint16 index, float value, uint64 guid);
         static void Customize(ObjectGuid guid, uint8 gender, uint8 skin, uint8 face, uint8 hairStyle, uint8 hairColor, uint8 facialHair);
         static void SavePositionInDB(ObjectGuid guid, uint32 mapid, float x,float y,float z,float o,uint32 zone);
 

@@ -67,7 +67,7 @@
 #include "GMTicketMgr.h"
 #include "Util.h"
 #include "CharacterDatabaseCleaner.h"
-#include "AuctionHouseBot.h"
+#include "AuctionHouseBot/AuctionHouseBot.h"
 
 INSTANTIATE_SINGLETON_1( World );
 
@@ -1366,6 +1366,9 @@ void World::SetInitialWorldSettings()
 
     m_timers[WUPDATE_EXT_MAIL].SetInterval(m_configUint32Values[CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL] * MINUTE * IN_MILLISECONDS);
 
+	// for AhBot
+	m_timers[WUPDATE_AHBOT].SetInterval(20*IN_MILLISECONDS); // every 20 sec
+
     //to set mailtimer to return mails every day between 4 and 5 am
     //mailtimer is increased when updating auctions
     //one second is 1000 -(tested on win system)
@@ -1519,7 +1522,6 @@ void World::Update(uint32 diff)
     /// <ul><li> Handle auctions when the timer has passed
     if (m_timers[WUPDATE_AUCTIONS].Passed())
     {
-        auctionbot.Update();
         m_timers[WUPDATE_AUCTIONS].Reset();
 
         ///- Update mails (return old mails with item, or delete them)
@@ -1533,6 +1535,13 @@ void World::Update(uint32 diff)
         ///- Handle expired auctions
         sAuctionMgr.Update();
     }
+
+	/// <li> Handle AHBot operations
+	if (m_timers[WUPDATE_AHBOT].Passed())
+	{
+		auctionbot.Update();
+		m_timers[WUPDATE_AHBOT].Reset();
+	}
 
     /// <li> Handle session updates when the timer has passed
     if (m_timers[WUPDATE_SESSIONS].Passed())
