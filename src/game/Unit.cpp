@@ -324,6 +324,11 @@ void Unit::Update( uint32 update_diff, uint32 p_time )
     // Spells must be processed with event system BEFORE they go to _UpdateSpells.
     // Or else we may have some SPELL_STATE_FINISHED spells stalled in pointers, that is bad.
     m_Events.Update( update_diff );
+	if(!IsInWorld())
+	{
+		sLog.outError("unit is not in world anymore after m_events update");
+		return;
+	}
     _UpdateSpells( update_diff );
 
     CleanupDeletedAuras();
