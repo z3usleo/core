@@ -643,7 +643,7 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
             {
                 case 28441:                                 // AB Effect 000
                     return false;
-                case 48021:                                 // support for quest 12173 
+                case 48021:                                 // support for quest 12173
                     return true;
                 case 49634:                                 // Sergeant's Flare
                 case 54530:                                 // Opening
@@ -1911,17 +1911,17 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                         return false;
 
                     // Flame Tsunami Visual and Damage
-					if ((spellInfo_1->Id == 57492 && spellInfo_2->Id == 57494) ||
-						(spellInfo_2->Id == 57492 && spellInfo_1->Id == 57494))
-						return false;
+                    if ((spellInfo_1->Id == 57492 && spellInfo_2->Id == 57494) ||
+                        (spellInfo_2->Id == 57492 && spellInfo_1->Id == 57494))
+                        return false;
 
-					// Sextant of Unstable Currents and Band of the Eternal Sage
-					if( spellInfo_1->SpellIconID == 502 && spellInfo_2->SpellIconID == 502 )
-						return false;
+                    // Sextant of Unstable Currents and Band of the Eternal Sage
+                    if (spellInfo_1->SpellIconID == 502 && spellInfo_2->SpellIconID == 502)
+                       return false;
 
-					// Lightning Speed and Crushing Waves
-					if( spellInfo_1->SpellIconID == 2010 && spellInfo_2->SpellIconID == 2010 )
-						return false;
+                    // Lightning Speed and Crushing Waves
+                    if (spellInfo_1->SpellIconID == 2010 && spellInfo_2->SpellIconID == 2010)
+                       return false;
 
                     // Lightning Speed (Mongoose) and Fury of the Crashing Waves (Tsunami Talisman)
                     if ((spellInfo_1->Id == 28093 && spellInfo_2->Id == 42084) ||
@@ -2176,9 +2176,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if( spellInfo_2->SpellIconID == 1985 && spellInfo_1->SpellIconID == 1985 && spellInfo_1->SpellVisual[0] == 9750 )
                     return false;
 
-                // (Corruption or Unstable Affliction or Curse of Agony or Curse of Doom) and Shadowflame 
-                if((spellInfo_1->SpellIconID == 313 || spellInfo_1->SpellIconID == 2039 || spellInfo_1->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_2->SpellIconID == 3317) || 
-                   (spellInfo_2->SpellIconID == 313 || spellInfo_2->SpellIconID == 2039 || spellInfo_2->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_1->SpellIconID == 3317)) 
+                // (Corruption or Unstable Affliction or Curse of Agony or Curse of Doom) and Shadowflame
+                if((spellInfo_1->SpellIconID == 313 || spellInfo_1->SpellIconID == 2039 || spellInfo_1->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_2->SpellIconID == 3317) ||
+                   (spellInfo_2->SpellIconID == 313 || spellInfo_2->SpellIconID == 2039 || spellInfo_2->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_1->SpellIconID == 3317))
                     return false;
             }
 
@@ -2362,7 +2362,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if ((spellInfo_2->SpellIconID == 250 && spellInfo_1->SpellIconID == 249))
                     return true;
             }
-            else if ( spellInfo_2->SpellFamilyName == SPELLFAMILY_DRUID ) 
+            else if ( spellInfo_2->SpellFamilyName == SPELLFAMILY_DRUID )
             {
                 // Sap & Prowl - Sap should remove Prowl aura
                 if ((spellInfo_2->SpellIconID == 103 && spellInfo_1->SpellIconID == 249))
@@ -4679,7 +4679,7 @@ bool SpellArea::IsFitToRequirements(Player const* player, uint32 newZone, uint32
             // not have expected aura
             return !player->HasAura(-auraSpell, EFFECT_INDEX_0);
     }
-	
+
     // Extra conditions -- leaving the possibility add extra conditions...
     switch(spellId)
     {
@@ -4688,14 +4688,14 @@ bool SpellArea::IsFitToRequirements(Player const* player, uint32 newZone, uint32
         {
             if (player->GetBattleGroundTypeId() != BATTLEGROUND_IC || !player->GetBattleGround())
                 return false;
- 
+
             uint8 nodeType = spellId == 68719 ? NODE_TYPE_REFINERY : NODE_TYPE_QUARRY;
             uint8 nodeState = player->GetTeamId() == TEAM_ALLIANCE ? NODE_STATE_CONTROLLED_A : NODE_STATE_CONTROLLED_H;
- 
+
             BattleGroundIC* pIC = static_cast<BattleGroundIC*>(player->GetBattleGround());
             if (pIC->GetNodeState(nodeType) == nodeState)
                 return true;
- 
+
             return false;
         }
     }
@@ -4713,7 +4713,7 @@ SpellEntry const* GetSpellEntryByDifficulty(uint32 id, Difficulty difficulty)
     if (!spellDiff->spellId[difficulty])
         return NULL;
 
-    sLog.outDebug("Searching spell %u in SpellDifficulty.dbc: Result is: %u/%u/%u/%u ",id, 
+    sLog.outDebug("Searching spell %u in SpellDifficulty.dbc: Result is: %u/%u/%u/%u ",id,
     spellDiff->spellId[RAID_DIFFICULTY_10MAN_NORMAL],
     spellDiff->spellId[RAID_DIFFICULTY_25MAN_NORMAL],
     spellDiff->spellId[RAID_DIFFICULTY_10MAN_HEROIC],
