@@ -1526,6 +1526,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     ((Player*)m_caster)->KilledMonster(pCreature->GetCreatureInfo(), pCreature->GetObjectGuid());
                     return;
                 }
+                case 43014:                                 // Despawn Self
+                {
+                    if (m_caster->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    ((Creature*)m_caster)->ForcedDespawn();
+                    return;
+                }
                 case 43036:                                 // Dismembering Corpse
                 {
                     if (!unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -2488,6 +2496,22 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->RemoveAurasDueToSpell(52006);
                     break;
                 }
+                default:                                   // DBC encounters main check
+                {
+                    if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if (m_caster->GetMap()->IsDungeon())
+                        {
+                            Player* creditedPlayer = unitTarget->GetCharmerOrOwnerPlayerOrPlayerItself();
+                            DungeonMap* dungeon = (DungeonMap*)m_caster->GetMap();;
+                            if (DungeonPersistentState* state = dungeon->GetPersistanceState())
+                            {
+                                dungeon->PermBindAllPlayers(creditedPlayer);
+                                state->UpdateEncounterState(ENCOUNTER_CREDIT_CAST_SPELL, m_spellInfo->Id, creditedPlayer);
+                            }
+                        }
+                    }
+                }
             }
             break;
         }
@@ -2544,6 +2568,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
+
+
             }
 
             // Conjure Mana Gem
@@ -4583,6 +4609,11 @@ void Spell::EffectOpenLock(SpellEffectIndex eff_idx)
         else if(gameObjTarget->GetGOInfo()->type == GAMEOBJECT_TYPE_GOOBER && sOutdoorPvPMgr.HandleOpenGo(player, gameObjTarget->GetGUID()))
             return;
 
+        else if (m_spellInfo->Id == 1842 && gameObjTarget->GetGOInfo()->type == GAMEOBJECT_TYPE_TRAP && gameObjTarget->GetOwner())
+        {
+            gameObjTarget->SetLootState(GO_JUST_DEACTIVATED);
+            return;
+        }
         lockId = goInfo->GetLockId();
         guid = gameObjTarget->GetGUID();
     }
@@ -8464,6 +8495,25 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
     if(!unitTarget)
         return;
     //unitTarget->CombatStop();
+
+    std::list<Unit *> targets;
+    {
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_caster, m_caster, m_caster->GetMap()->GetVisibilityDistance());
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(targets, u_check);
+        Cell::VisitAllObjects(m_caster, searcher, m_caster->GetMap()->GetVisibilityDistance());
+    }
+
+    for(std::list<Unit *>::iterator tIter = targets.begin(); tIter != targets.end(); ++tIter)
+    {
+        for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
+        {
+            if ((*tIter)->GetCurrentSpell(CurrentSpellTypes(i))
+            && (*tIter)->GetCurrentSpell(CurrentSpellTypes(i))->m_targets.getUnitTargetGUID() == unitTarget->GetGUID())
+            {
+                (*tIter)->InterruptSpell(CurrentSpellTypes(i), false);
+            }
+        }
+    }
 
     unitTarget->CombatStop();
     unitTarget->getHostileRefManager().deleteReferences();  // stop all fighting
