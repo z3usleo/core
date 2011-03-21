@@ -12397,28 +12397,6 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
 
 void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool unequip_check)
 {
-    /*  Flying Everywhere   */
-    if (sWorld.getConfig(CONFIG_BOOL_ALLOW_FLYING_MOUNTS_EVERYWHERE))
-    {
-        ItemPrototype const *pProto = sObjectMgr.GetItemPrototype(pItem->GetEntry());
-        if(pProto)
-        {
-            for(int i = 0; i < 5; i++)
-            {
-                SpellEntry const *sEntry = sSpellStore.LookupEntry(pProto->Spells[i].SpellId);
-                if(!sEntry)
-                    continue;
-
-                if(isFlyingSpell(sEntry) || isFlyingFormSpell(sEntry))
-                {
-                    pItem->SetSpellCharges(0, 1);
-                    pItem->SetState(ITEM_CHANGED, this);
-                    return;
-                }
-            }
-        }
-    }
-
     DEBUG_LOG( "STORAGE: DestroyItemCount item = %u, count = %u", item, count);
     uint32 remcount = 0;
 
@@ -12605,8 +12583,30 @@ void Player::DestroyConjuredItems( bool update )
 
 void Player::DestroyItemCount( Item* pItem, uint32 &count, bool update )
 {
-    if(!pItem)
-        return;
+    if (!pItem)
+         return;
+		
+    /*  Flying Everywhere   */
+    if (sWorld.getConfig(CONFIG_BOOL_ALLOW_FLYING_MOUNTS_EVERYWHERE))
+    {
+        ItemPrototype const *pProto = sObjectMgr.GetItemPrototype(pItem->GetEntry());
+        if (pProto)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                SpellEntry const *sEntry = sSpellStore.LookupEntry(pProto->Spells[i].SpellId);
+                if(!sEntry)
+                    continue;
+
+                if (isFlyingSpell(sEntry) || isFlyingFormSpell(sEntry))
+                {
+                    pItem->SetSpellCharges(0, 1);
+                    pItem->SetState(ITEM_CHANGED, this);
+                    return;
+                }
+            }
+        }
+    }
 
     DEBUG_LOG( "STORAGE: DestroyItemCount item (GUID: %u, Entry: %u) count = %u", pItem->GetGUIDLow(),pItem->GetEntry(), count);
 

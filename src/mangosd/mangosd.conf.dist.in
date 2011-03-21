@@ -1883,7 +1883,7 @@ PvPAnnouncer.ColorArea = |CFFFE8A0E
 #                0 - disabled
 ###################################################################################################################
 
-Custom.AllowFlyingMountsEverywhere = 1
+Custom.AllowFlyingMountsEverywhere = 0
 
 ###################################################################################################################
 #    Refer-A-Friend system by Mas0n
