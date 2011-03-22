@@ -3514,8 +3514,14 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                 }
                 case 72178:                                 // Blood link Saurfang aura
                 {
-                    target = this;
-                    trigger_spell_id = 72195;
+                    if (!procSpell)
+                        return SPELL_AURA_PROC_FAILED;
+
+                    // needs fix:
+                    // spells cause too much energize effects
+
+                    //target = this;
+                    //trigger_spell_id = 72195;
                     break;
                 }
             }
