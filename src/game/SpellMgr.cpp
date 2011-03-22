@@ -853,6 +853,9 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                     if (spellproto->SpellIconID==2874)      // Some phasing Auras of Herald Volazj in Ahn'kahet
                         return false;
                     break;
+                case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:
+                    if (spellproto->Id == 56438)            // Arcane Overload (Malygos)
+                        return true;
                 default:
                     break;
             }
