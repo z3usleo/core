@@ -27,8 +27,6 @@
 #include "Log.h"
 #include "Master.h"
 #include "SystemConfig.h"
-#include "../game/mangchat/IRCConf.h"
-#include "../game/mangchat/IRCClient.h"
 #include "revision.h"
 #include "revision_nr.h"
 #include <openssl/opensslv.h>
@@ -67,8 +65,6 @@ void usage(const char *prog)
         "    -s run                   run as service\n\r"
         "    -s install               install service\n\r"
         "    -s uninstall             uninstall service\n\r"
-        "    -m MangChat_config       use Mangchat_config as configuration file for MangChat\n\r"
-
         #endif
         ,prog);
 }
@@ -83,13 +79,11 @@ extern int main(int argc, char **argv)
 
     ///- Command line parsing
     char const* cfg_file = _MANGOSD_CONFIG;
-    char const* mc_cfg_file = _MANGCHAT_CONFIG;
-
 
 #ifdef WIN32
-    char const *options = ":c:m:s:";
+    char const *options = ":c:s:";
 #else
-    char const *options = ":c:m:";
+    char const *options = ":c:";
 #endif
 
     ACE_Get_Opt cmd_opts(argc, argv, options);
@@ -103,14 +97,9 @@ extern int main(int argc, char **argv)
             case 'c':
                 cfg_file = cmd_opts.opt_arg();
                 break;
-            case 'm':
-                mc_cfg_file = cmd_opts.opt_arg();
-                break;
             case 'v':
                 printf("%s\n", _FULLVERSION(REVISION_DATE,REVISION_TIME,REVISION_NR,REVISION_ID));
                 return 0;
-			
-
 #ifdef WIN32
             case 's':
             {
@@ -159,8 +148,6 @@ extern int main(int argc, char **argv)
         Log::WaitBeforeContinueIfNeed();
         return 1;
     }
-
-    sIRC.SetCfgFile(mc_cfg_file);
 
     sLog.outString( "%s [world-daemon]", _FULLVERSION(REVISION_DATE,REVISION_TIME,REVISION_NR,REVISION_ID) );
     sLog.outString( "<Ctrl-C> to stop.\n\n" );

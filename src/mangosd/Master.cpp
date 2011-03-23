@@ -37,7 +37,6 @@
 #include "Util.h"
 #include "revision_sql.h"
 #include "MaNGOSsoap.h"
-#include "mangchat/IRCClient.h"
 #include "MassMailMgr.h"
 #include "DBCStores.h"
 
@@ -195,9 +194,6 @@ int Master::Run()
         return 1;
     }
 
-    //- Load Mangchat Config (MangChat needs DB for gm levels, AutoBroadcast uses world timers)
-    sIRC.LoadConfig();
-
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
 
@@ -293,10 +289,6 @@ int Master::Run()
         runnable->setListenArguments(sConfig.GetStringDefault("SOAP.IP", "127.0.0.1"), sConfig.GetIntDefault("SOAP.Port", 7878));
         soap_thread = new ACE_Based::Thread(runnable);
     }
-
-    //Start up MangChat
-    ACE_Based::Thread irc(new IRCClient);
-    irc.setPriority (ACE_Based::High);
 
     ///- Start up freeze catcher thread
     ACE_Based::Thread* freeze_thread = NULL;
