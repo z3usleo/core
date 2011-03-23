@@ -1036,16 +1036,20 @@ void Spell::AddItemTarget(Item* pitem, SpellEffectIndex effIndex)
 
 void Spell::DoAllEffectOnTarget(TargetInfo *target)
 {
-    if (target->processed)                                  // Check target
+    if (m_spellInfo->Id <= 0 || m_spellInfo->Id > MAX_SPELL_ID ||  m_spellInfo->Id == 32 || m_spellInfo->Id == 80)
         return;
-    target->processed = true;                               // Target checked in apply effects procedure
 
-    // Get mask of effects for target
-    uint32 mask = target->effectMask;
+    if (!target || target == (TargetInfo*)0x10 || target->processed)
+        return;
 
     Unit* unit = m_caster->GetObjectGuid() == target->targetGUID ? m_caster : ObjectAccessor::GetUnit(*m_caster, target->targetGUID);
     if (!unit)
         return;
+
+    target->processed = true;                               // Target checked in apply effects procedure
+
+    // Get mask of effects for target
+    uint32 mask = target->effectMask;
 
     // Get original caster (if exist) and calculate damage/healing from him data
     Unit *real_caster = GetAffectiveCaster();
@@ -1672,6 +1676,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 70836:                                 // Bone Storm
                 case 71518:                                 // Unholy infusion credit
                 case 72289:                                 // Frost infusion credit
+                case 72706:                                 // Valithria event credit
                 case 72934:                                 // Blood infusion credit
                     radius = DEFAULT_VISIBILITY_INSTANCE;
                     break;
@@ -5746,6 +5751,13 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if (!target || !target->IsReferAFriendLinked(((Player*)m_caster)))
                     return SPELL_FAILED_BAD_TARGETS;
 
+                break;
+            }
+            case SPELL_EFFECT_RESURRECT:
+            case SPELL_EFFECT_RESURRECT_NEW:
+            {
+                if(m_caster->GetTypeId() == TYPEID_PLAYER && ((Player*)m_caster)->isTotalImmune())
+                    return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
                 break;
             }
             case SPELL_EFFECT_LEAP:

@@ -1057,12 +1057,10 @@ void BattleGroundSA::TeleportPlayerToCorrectLoc(Player *plr, bool resetBattle)
     {
         if (plr->GetTeam() != GetDefender())
         {
-            plr->CastSpell(plr,12438,true);//Without this player falls before boat loads...
-
             if (urand(0,1))
-                plr->TeleportTo(607, 2682.936f, -830.368f, 50.0f, 2.895f, 0);
+                plr->TeleportTo(607, 2682.936f, -830.368f, 15.0f, 2.895f, 0);
             else
-                plr->TeleportTo(607, 2577.003f, 980.261f, 50.0f, 0.807f, 0);
+                plr->TeleportTo(607, 2577.003f, 980.261f, 15.0f, 0.807f, 0);
 
         }
         else

@@ -4576,7 +4576,8 @@ void Player::BuildPlayerRepop()
     if(GetCorpse())
     {
         sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
-        MANGOS_ASSERT(false);
+        sLog.outError("Removing player %s(%d) corpse from DB", GetName(), GetGUIDLow());
+        CharacterDatabase.PExecute("DELETE FROM corpse WHERE player = '%d'",GetGUIDLow());
     }
 
     // create a corpse and place it at the player's location
@@ -6730,6 +6731,75 @@ void Player::UpdateHonorFields()
     }
 
     m_lastHonorUpdateTime = now;
+	
+    uint32 HonorKills = GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS);
+    uint32 victim_rank = 0;
+
+    if (HonorKills < 10)
+        return;
+
+    if (HonorKills >= 10 && HonorKills < 100)
+        victim_rank = 1;
+    else if (HonorKills >= 100 && HonorKills < 250)
+        victim_rank = 2;
+    else if (HonorKills >= 250 && HonorKills < 500)
+        victim_rank = 3;
+    else if (HonorKills >= 500 && HonorKills < 1500)
+        victim_rank = 4;
+    else if (HonorKills >= 1500 && HonorKills < 5000)
+        victim_rank = 5;
+    else if (HonorKills >= 5000 && HonorKills < 7500)
+        victim_rank = 6;
+    else if (HonorKills >= 7500 && HonorKills < 10000)
+        victim_rank = 7;
+    else if (HonorKills >= 10000 && HonorKills < 12500)
+        victim_rank = 8;
+    else if (HonorKills >= 12500 && HonorKills < 15000)
+        victim_rank = 9;
+    else if (HonorKills >= 15000 && HonorKills < 17500)
+        victim_rank = 10;
+    else if (HonorKills >= 17500 && HonorKills < 20000)
+        victim_rank = 11;
+    else if (HonorKills >= 20000 && HonorKills < 25000)
+        victim_rank = 12;
+    else if (HonorKills >= 25000 && HonorKills < 50000)
+        victim_rank = 13;
+    else if (HonorKills >= 50000)
+        victim_rank = 14;
+
+    if (victim_rank == 0)
+        return;
+
+    if (GetTeam() == HORDE && victim_rank != 0)
+        victim_rank += 14;
+
+    CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(victim_rank);
+    if (!HasTitle(titleEntry))
+        SetTitle(titleEntry);
+    else
+        return;
+
+    SetUInt32Value(PLAYER_CHOSEN_TITLE,victim_rank);
+
+    uint32 startid = 1;
+    if (GetTeam() == HORDE)
+        startid = 15;
+
+    for(uint32 i = startid; i < victim_rank; ++i)
+    {
+        if (i == victim_rank)
+            break;
+        else
+        {
+            if (!HasTitle(titleEntry))
+                continue;
+            else
+            {
+                CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(i);
+                SetTitle(titleEntry,true);
+            }
+        }
+    }
 }
 
 ///Calculate the amount of honor gained based on the victim
@@ -22942,6 +23012,11 @@ void Player::ActivateSpec(uint8 specNum)
     else if (Pet* pet = GetPet())
         pet->Unsummon(PET_SAVE_NOT_IN_SLOT, this);
 
+    ClearComboPointHolders();
+    ClearAllReactives();
+    UnsummonAllTotems();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+    RemoveArenaAuras();
     SendActionButtons(2);
 
     // prevent deletion of action buttons by client at spell unlearn or by player while spec change in progress
