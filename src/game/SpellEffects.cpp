@@ -1459,6 +1459,15 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     ((Creature*)unitTarget)->ForcedDespawn(10000);
                     return;
                 }
+                case 39992:                                 // High Warlord Naj'entus: Needle Spine Targeting
+                {
+                    if (!unitTarget)
+                        return;
+
+                    // TODO - Cone Targeting; along wowwiki this spell should target "three random targets in a cone"
+                    m_caster->CastSpell(unitTarget, 39835, true);
+                    return;
+                }
                 case 40802:                                 // Mingo's Fortune Generator (Mingo's Fortune Giblets)
                 {
                     // selecting one from Bloodstained Fortune item
@@ -1835,6 +1844,18 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             break;
                     }
 
+                    return;
+                }
+                case 48046:                                 // Use Camera
+                {
+                    if (!unitTarget)
+                        return;
+
+                    // No despawn expected, nor any change in dynamic flags/other flags.
+                    // Need internal way to track if credit has been given for this object.
+
+                    // Iron Dwarf Snapshot Credit
+                    m_caster->CastSpell(m_caster, 48047, true, m_CastItem, NULL, unitTarget->GetObjectGuid());
                     return;
                 }
                 case 49357:                                 // Brewfest Mount Transformation
@@ -5476,6 +5497,10 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
 
         spawnCreature->SetSummonPoint(pos);
 
+        // Notify Summoner
+        if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->AI())
+            ((Creature*)m_caster)->AI()->JustSummoned(spawnCreature);
+
         DEBUG_LOG("Guardian pet (guidlow %d, entry %d) summoned (default). Counter is %d ", spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), spawnCreature->GetPetCounter());
     }
 }
@@ -5533,11 +5558,16 @@ void Spell::DoSummonVehicle(SpellEffectIndex eff_idx, uint32 forceFaction)
         m_caster->CastSpell(vehicle, m_mountspell, true);
         DEBUG_LOG("Caster (guidlow %d) summon vehicle (guidlow %d, entry %d) and mounted with spell %d ", m_caster->GetGUIDLow(), vehicle->GetGUIDLow(), vehicle->GetEntry(), m_mountspell->Id);
 
-		if((((Player*)m_caster)->GetQuestStatus(12779) == QUEST_STATUS_INCOMPLETE) && (vehicle->GetCreatureInfo()->VehicleId == 156))
-		{
-			char * Text = "Vermeidet heranfliegende Pfeile und Speere des Scharlachroten Kreuzzugs,\nindem Ihr aus ihrer Reichweite bleibt!";
-			vehicle->MonsterTextEmote(Text, m_caster, true);
-		}
+        // Notify Summoner
+        if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->AI())
+            ((Creature*)m_caster)->AI()->JustSummoned(vehicle);
+
+        if((((Player*)m_caster)->GetQuestStatus(12779) == QUEST_STATUS_INCOMPLETE) && (vehicle->GetCreatureInfo()->VehicleId == 156))
+        {
+            char * Text = "Vermeidet heranfliegende Pfeile und Speere des Scharlachroten Kreuzzugs,\nindem Ihr aus ihrer Reichweite bleibt!";
+            vehicle->MonsterTextEmote(Text, m_caster, true);
+        }
+
     }
     else
         sLog.outError("Vehicle (guidlow %d, entry %d) NOT summoned by undefined reason. ", vehicle->GetGUIDLow(), vehicle->GetEntry());
@@ -6916,6 +6946,14 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     // Removes snares and roots.
                     unitTarget->RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,30918,true);
                     break;
+                }
+                case 39835:                                 // Needle Spine (Warlord Najentus)
+                {
+                    if (!unitTarget)
+                        return;
+
+                    // TODO likely that this spell should have m_caster as Original caster, but conflicts atm with TARGET_ALL_FRIENDLY_UNITS_AROUND_CASTER
+                    unitTarget->CastSpell(unitTarget, 39968, true);
                 }
                 case 41055:                                 // Copy Weapon
                 {
@@ -9334,7 +9372,12 @@ void Spell::DoSummonCritter(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     critter->SetSummonPoint(pos);
 
+    // Notify Summoner
+    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->AI())
+        ((Creature*)m_caster)->AI()->JustSummoned(critter);
+
     DEBUG_LOG("New mini pet has guid %u", critter->GetGUIDLow());
+
 }
 
 void Spell::EffectKnockBack(SpellEffectIndex eff_idx)
