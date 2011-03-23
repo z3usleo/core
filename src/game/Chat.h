@@ -593,6 +593,7 @@ class ChatHandler
         bool HandleWaterwalkCommand(char* args);
         bool HandlePlayerbotCommand(char* args);
         bool HandleQuitCommand(char* args);
+        bool HandleIRCpmCommand(char* args);
 
         // Jail by WarHead
         bool HandleJailCommand(char* args);

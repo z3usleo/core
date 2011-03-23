@@ -31,6 +31,9 @@
     <Filter Include="AuctionHouseBot">
       <UniqueIdentifier>{8450f8a7-a394-4e7c-9d23-63b5d6da8a9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="IRC">
+      <UniqueIdentifier>{dfba659a-dad2-4bb6-b32a-f80bf7c7bcda}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\game\AccountMgr.cpp">
@@ -574,6 +577,30 @@
     <ClCompile Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.cpp">
       <Filter>AuctionHouseBot</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCClient.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCSock.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCCmd.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCCmde.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCConf.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCIO.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\IRCLog.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\mangchat\MCS_OnlinePlayers.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\game\AccountMgr.h">
@@ -1095,6 +1122,23 @@
     </ClInclude>
     <ClInclude Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.h">
       <Filter>AuctionHouseBot</Filter>
+    <ClInclude Include="..\..\src\game\mangchat\IRCClient.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\mangchat\IRCCmd.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\mangchat\IRCConf.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\mangchat\IRCFunc.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\mangchat\IRCLog.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\mangchat\MCS_OnlinePlayers.h">
+      <Filter>IRC</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

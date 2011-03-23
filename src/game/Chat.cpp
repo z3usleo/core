@@ -798,7 +798,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "cometome",       SEC_ADMINISTRATOR,  false, &ChatHandler::HandleComeToMeCommand,            "", NULL },
         { "damage",         SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDamageCommand,              "", NULL },
         { "combatstop",     SEC_GAMEMASTER,     false, &ChatHandler::HandleCombatStopCommand,          "", NULL },
-		{ "ahbot",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleAHBotOptionsCommand,        "", NULL },
+        { "ahbot",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleAHBotOptionsCommand,        "", NULL },
         { "flusharenapoints",SEC_ADMINISTRATOR, false, &ChatHandler::HandleFlushArenaPointsCommand,    "", NULL },
         { "repairitems",    SEC_GAMEMASTER,     true,  &ChatHandler::HandleRepairitemsCommand,         "", NULL },
         { "stable",         SEC_ADMINISTRATOR,  false, &ChatHandler::HandleStableCommand,              "", NULL },
@@ -807,7 +807,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "bot",            SEC_PLAYER,         false, &ChatHandler::HandlePlayerbotCommand,           "", NULL },
         { "quit",           SEC_CONSOLE,        true,  &ChatHandler::HandleQuitCommand,                "", NULL },
         { "mmap",           SEC_GAMEMASTER,     false, NULL,                                           "", mmapCommandTable },
-
+        { "ircpm",          SEC_PLAYER,         false, &ChatHandler::HandleIRCpmCommand,               "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
