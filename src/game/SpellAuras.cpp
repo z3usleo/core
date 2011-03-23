@@ -46,6 +46,7 @@
 #include "Vehicle.h"
 #include "CellImpl.h"
 #include "PossessedSummon.h"
+#include "InstanceData.h"
 
 #define NULL_AURA_SLOT 0xFF
 
@@ -5230,6 +5231,8 @@ void Aura::HandleAuraModEffectImmunity(bool apply, bool /*Real*/)
     {
         if( BattleGround *bg = ((Player*)target)->GetBattleGround() )
             bg->EventPlayerDroppedFlag(((Player*)target));
+        else if (InstanceData* mapInstance = ((Player*)target)->GetInstanceData())
+            mapInstance->OnPlayerDroppedFlag((Player*)target, GetSpellProto()->Id);
     }
 
     target->ApplySpellImmune(GetId(), IMMUNITY_EFFECT, m_modifier.m_miscvalue, apply);
