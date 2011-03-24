@@ -552,7 +552,6 @@ enum GOState
 // from `gameobject`
 struct GameObjectData
 {
-	explicit GameObjectData() : dbData(true) {}
     uint32 id;                                              // entry in gamobject_template
     uint16 mapid;
     uint16 phaseMask;
@@ -568,8 +567,6 @@ struct GameObjectData
     uint32 animprogress;
     GOState go_state;
     uint8 spawnMask;
-	uint8 artKit;
-	bool dbData;
 };
 
 // For containers:  [GO_NOT_READY]->GO_READY (close)->GO_ACTIVATED (open) ->GO_JUST_DEACTIVATED->GO_READY        -> ...
@@ -600,10 +597,9 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state, uint32 artKit = 0);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state);
         void Update(uint32 update_diff, uint32 p_time);
-        GameObjectInfo const* GetGOInfo() const { return m_goInfo; }
-        GameObjectData const* GetGOData() const { return m_goData; }
+        GameObjectInfo const* GetGOInfo() const;
 
         bool IsTransport() const;
         bool IsDynTransport() const;
@@ -672,8 +668,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         GOState GetGoState() const { return GOState(GetByteValue(GAMEOBJECT_BYTES_1, 0)); }
         void SetGoState(GOState state) { SetByteValue(GAMEOBJECT_BYTES_1, 0, state); }
         uint8 GetGoArtKit() const { return GetByteValue(GAMEOBJECT_BYTES_1, 2); }
-        void SetGoArtKit(uint8 artkit);
-        static void SetGoArtKit(uint8 artkit, GameObject *go, uint32 lowguid = 0);
+        void SetGoArtKit(uint8 artkit) { SetByteValue(GAMEOBJECT_BYTES_1, 2, artkit); }
         uint8 GetGoAnimProgress() const { return GetByteValue(GAMEOBJECT_BYTES_1, 3); }
         void SetGoAnimProgress(uint8 animprogress) { SetByteValue(GAMEOBJECT_BYTES_1, 3, animprogress); }
 
@@ -754,7 +749,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         GuidsSet m_UniqueUsers;                             // all players who use item, some items activated after specific amount unique uses
 
         GameObjectInfo const* m_goInfo;
-        GameObjectData const* m_goData;
         uint64 m_rotation;
     private:
         void SwitchDoorOrButton(bool activate, bool alternative = false);
