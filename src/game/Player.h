@@ -60,6 +60,7 @@ class Item;
 #include "playerbot/PlayerbotMgr.h"
 #include "playerbot/PlayerbotAI.h"
 
+
 typedef std::deque<Mail*> PlayerMails;
 
 #define PLAYER_MAX_SKILLS           127
