@@ -10568,7 +10568,7 @@ void Aura::HandleAuraSetVehicle(bool apply, bool real)
     }
 }
 
-void Aura::HandleAuraFactionChange(bool apply, bool real)
+/*void Aura::HandleAuraFactionChange(bool apply, bool real)
 {
     if (!real)
         return;
@@ -10582,7 +10582,7 @@ void Aura::HandleAuraFactionChange(bool apply, bool real)
 
     if (newFaction && newFaction != target->getFaction())
         target->setFaction(newFaction);
-}
+}*/
 
 void Aura::HandleAuraAoeCharm(bool apply, bool real)
 {
