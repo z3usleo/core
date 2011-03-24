@@ -10526,3 +10526,4 @@ void Aura::HandleAuraAoeCharm(bool apply, bool real)
         }
     }
 }
+
