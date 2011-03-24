@@ -2207,11 +2207,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->DealDamage(unitTarget, unitTarget->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false); 
                     return; 
                 }
-                case 48046:                                 // Iron Dwarf Snapshot Credit 
-                {                                            
-                    m_caster->CastSpell(m_caster,48047,true); 
-                    return; 
-                }
                 case 51582:                                 // Rocket Boots Engaged (Rocket Boots Xtreme and Rocket Boots Xtreme Lite)
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
