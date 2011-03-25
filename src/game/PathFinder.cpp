@@ -25,8 +25,10 @@
 #include "../recastnavigation/Detour/Include/DetourCommon.h"
 
 ////////////////// PathInfo //////////////////
-PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, const float destZ, bool useStraightPath) :
-    m_polyLength(0), m_type(PATHFIND_BLANK), m_useStraightPath(useStraightPath),
+PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, const float destZ,
+                   bool useStraightPath, bool forceDest) :
+    m_polyLength(0), m_type(PATHFIND_BLANK),
+    m_useStraightPath(useStraightPath), m_forceDestination(forceDest),
     m_sourceUnit(owner), m_navMesh(NULL), m_navMeshQuery(NULL)
 {
     PathNode endPoint(destX, destY, destZ);
@@ -49,8 +51,8 @@ PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, cons
 
     createFilter();
 
-
-    if (m_navMesh && m_navMeshQuery && !m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) && !(m_sourceUnit->GetTypeId() == TYPEID_UNIT ? ((Creature*)m_sourceUnit)->IsWorldBoss() : false))
+    if (m_navMesh && m_navMeshQuery && HaveTiles(endPoint) &&
+            !m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) && !(m_sourceUnit->GetTypeId() == TYPEID_UNIT ? ((Creature*)m_sourceUnit)->IsWorldBoss() : false))
     {
         BuildPolyPath(startPoint, endPoint);
     }
@@ -66,7 +68,8 @@ PathInfo::~PathInfo()
     DEBUG_FILTER_LOG(LOG_FILTER_PATHFINDING, "++ PathInfo::~PathInfo() for %u \n", m_sourceUnit->GetGUID());
 }
 
-bool PathInfo::Update(const float destX, const float destY, const float destZ, bool useStraightPath)
+bool PathInfo::Update(const float destX, const float destY, const float destZ,
+                      bool useStraightPath, bool forceDest)
 {
     PathNode newDest(destX, destY, destZ);
     PathNode oldDest = getEndPosition();
@@ -79,11 +82,13 @@ bool PathInfo::Update(const float destX, const float destY, const float destZ, b
     setStartPosition(newStart);
 
     m_useStraightPath = useStraightPath;
+    m_forceDestination = forceDest;
 
     DEBUG_FILTER_LOG(LOG_FILTER_PATHFINDING, "++ PathInfo::Update() for %u \n", m_sourceUnit->GetGUID());
 
     // make sure navMesh works - we can run on map w/o mmap
-    if (!m_navMesh || !m_navMeshQuery || m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING))
+    if (!m_navMesh || !m_navMeshQuery || !HaveTiles(newDest) ||
+            m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING))
     {
         BuildShortcut();
         m_type = PathType(PATHFIND_NORMAL | PATHFIND_NOT_USING_PATH);
@@ -222,7 +227,7 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
             if (m_sourceUnit->GetTerrain()->IsUnderWater(p.x, p.y, p.z))
             {
                 DEBUG_FILTER_LOG(LOG_FILTER_PATHFINDING, "++ BuildPolyPath :: underWater case\n");
-                if (owner->CanSwim() || owner->IsPet())
+                if (owner->CanSwim())
                     buildShotrcut = true;
             }
             else
@@ -472,6 +477,16 @@ void PathInfo::BuildPointPath(float *startPoint, float *endPoint)
     setNextPosition(m_pathPoints[1]);
     setActualEndPosition(m_pathPoints[pointCount-1]);
 
+    // force the given destination, if needed
+    if(m_forceDestination &&
+        (!(m_type & PATHFIND_NORMAL) || !inRange(getEndPosition(), getActualEndPosition(), 1.0f, 1.0f)))
+    {
+        setActualEndPosition(getEndPosition());
+        BuildShortcut();
+        m_type = PathType(PATHFIND_NORMAL | PATHFIND_NOT_USING_PATH);
+        return;
+    }
+
     DEBUG_FILTER_LOG(LOG_FILTER_PATHFINDING, "++ PathInfo::BuildPointPath path type %d size %d poly-size %d\n", m_type, pointCount, m_polyLength);
 }
 
@@ -504,13 +519,11 @@ void PathInfo::createFilter()
             includeFlags |= NAV_GROUND;          // walk
 
         // creatures don't take environmental damage
-        if (creature->CanSwim() || creature->IsPet())
+        if (creature->CanSwim())
             includeFlags |= (NAV_WATER | NAV_MAGMA | NAV_SLIME);           // swim
     }
     else if (m_sourceUnit->GetTypeId() == TYPEID_PLAYER)
     {
-        Player* player = (Player*)m_sourceUnit;
-
         // perfect support not possible, just stay 'safe'
         includeFlags |= (NAV_GROUND | NAV_WATER);
     }
@@ -553,6 +566,16 @@ NavTerrain PathInfo::getNavTerrain(float x, float y, float z)
         default:
             return NAV_GROUND;
     }
+}
+
+bool PathInfo::HaveTiles(const PathNode p) const
+{
+    int tx, ty;
+    float point[VERTEX_SIZE] = {p.y, p.z, p.x};
+
+    // check if the start and end point have a .mmtile loaded
+    m_navMesh->calcTileLoc(point, &tx, &ty);
+    return (m_navMesh->getTileAt(tx, ty) != NULL);
 }
 
 uint32 PathInfo::fixupCorridor(dtPolyRef* path, const uint32 npath, const uint32 maxPath,
