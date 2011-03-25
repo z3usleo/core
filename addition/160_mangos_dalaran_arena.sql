@@ -25,7 +25,8 @@ insert into `gameobject_battleground` values
 delete from `battleground_events` where `map` = 617;
 insert into `battleground_events` values
 ('617','252','0','buffs'),
-('617','254','0','doors');
+('617','254','0','doors'),
+('617','250','0','waterfall');
 
 -- doors
 update `gameobject_template` set `faction` = 114, `flags` = 32, `size` = 1.5 where `entry` in (192642,192643);
