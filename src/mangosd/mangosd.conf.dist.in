@@ -386,7 +386,7 @@ GmLogFile = ""
 GmLogTimestamp = 0
 GmLogPerAccount = 0
 RaLogFile = ""
-LogColors = ""
+LogColors = "13 7 11 9"
 
 ###################################################################################################################
 #   LEXICS CUTTER SYSTEM
