@@ -1,10 +1,12 @@
 -- Strand of the Ancients BattleGround
 
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `faction`, `flags`, `size`, `questItem1`, `questItem2`, `questItem3`, `questItem4`, `questItem5`, `questItem6`, `data0`, `data1`, `data2`, `data3`, `data4`, `data5`, `data6`, `data7`, `data8`, `data9`, `data10`, `data11`, `data12`, `data13`, `data14`, `data15`, `data16`, `data17`, `data18`, `data19`, `data20`, `data21`, `data22`, `data23`, `ScriptName`) VALUES
+(300000, 0, 7203, 'Forcefield 000', '', '', '', 1375, 32, 0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
 UPDATE `creature_template` SET npcflag=1, `ScriptName` = 'npc_sa_vendor' WHERE entry in (29260,29262);
 -- Seaforium source
 DELETE FROM `creature_template` WHERE `entry` in (50000);
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `modelid_1`, `modelid_2`, `modelid_3`, `modelid_4`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `minhealth`, `maxhealth`, `minmana`, `maxmana`, `armor`, `faction_A`, `faction_H`, `npcflag`, `speed_run`, `scale`, `rank`, `mindmg`, `maxdmg`, `dmgschool`, `attackpower`, `dmg_multiplier`, `baseattacktime`, `rangeattacktime`, `unit_class`, `unit_flags`, `dynamicflags`, `family`, `trainer_type`, `trainer_spell`, `trainer_class`, `trainer_race`, `minrangedmg`, `maxrangedmg`, `rangedattackpower`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `resistance1`, `resistance2`, `resistance3`, `resistance4`, `resistance5`, `resistance6`, `spell1`, `spell2`, `spell3`, `spell4`, `PetSpellDataId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `InhabitType`, `unk16`, `unk17`, `RacialLeader`, `questItem1`, `questItem2`, `questItem3`, `questItem4`, `questItem5`, `questItem6`, `movementId`, `RegenHealth`, `equipment_id`, `mechanic_immune_mask`, `flags_extra`, `ScriptName`) VALUES
-(50000, 0, 0, 0, 0, 0, 27462, 0, 27462, 0, 'Carga de Seforio', NULL, NULL, 0, 80, 80, 5000, 5000, 0, 0, 9730, 7, 7, 0, 1, 0.5, 0, 420, 630, 0, 157, 1, 2000, 2000, 1, 0, 0, 0, 0, 0, 0, 0, 336, 504, 126, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 94, 1, 0, 0, 0, 'npc_sa_bomb');
+(50000, 0, 0, 0, 0, 0, 27462, 0, 27462, 0, 'Seaforium Charge', NULL, NULL, 0, 80, 80, 5000, 5000, 0, 0, 9730, 7, 7, 0, 1, 0.5, 0, 420, 630, 0, 157, 1, 2000, 2000, 1, 0, 0, 0, 0, 0, 0, 0, 336, 504, 126, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 94, 1, 0, 0, 0, 'npc_sa_bomb');
 -- Doors
 UPDATE `gameobject_template` SET `faction` = 14 WHERE `entry` in (192549,190727,190726,190723,190724,190722);
 -- Seaforium barrels
@@ -69,10 +71,10 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `modelid`
 (200015, 28781, 607, 3, 1, 0, 0, 1594.24, 39.16, 7.49, 0.62, 450, 0, 0, 50000, 0, 0, 0),
 (200016, 28781, 607, 3, 1, 0, 0, 1618.60, 62.26, 7.17, 3.61, 450, 0, 0, 50000, 0, 0, 0),
 -- 
-(200027, 28781, 607, 3, 1, 0, 0, 1353.28, 224.092, 35.2432, 4.35363, 600, 5, 0, 50000, 0, 0, 0),
-(200028, 28781, 607, 3, 1, 0, 0, 1347.65, 208.805, 34.2892, 4.39378, 600, 5, 0, 50000, 0, 0, 0),
-(200029, 28781, 607, 3, 1, 0, 0, 1371.2, -317.169, 34.9982, 1.93504, 600, 5, 0, 50000, 0, 0, 0),
-(200030, 28781, 607, 3, 1, 0, 0, 1365.52, -301.854, 34.0439, 1.91998, 600, 5, 0, 50000, 0, 0, 0);
+(200027, 28781, 607, 3, 1, 0, 0, 1353.28, 224.092, 35.2432, 4.35363, 600, 0, 0, 50000, 0, 0, 0),
+(200028, 28781, 607, 3, 1, 0, 0, 1347.65, 208.805, 34.2892, 4.39378, 600, 0, 0, 50000, 0, 0, 0),
+(200029, 28781, 607, 3, 1, 0, 0, 1371.2, -317.169, 34.9982, 1.93504, 600, 0, 0, 50000, 0, 0, 0),
+(200030, 28781, 607, 3, 1, 0, 0, 1365.52, -301.854, 34.0439, 1.91998, 600, 0, 0, 50000, 0, 0, 0);
 
 DELETE FROM `creature_battleground` WHERE `guid` in (200001,200002,200003,200004,200005,200006,200007,200008,200009,200010,200011,200012,200013,200014,200015,200016,200027,200028,200029,200030);
 INSERT INTO `creature_battleground` (`guid` ,`event1` ,`event2`) VALUES
