@@ -3,6 +3,12 @@ DELETE FROM `creature` WHERE `id`=16294;
 INSERT INTO `creature` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`modelid`,`equipment_id`,`position_x`,`position_y`,`position_z`,`orientation`,`spawntimesecs`,`spawndist`,`currentwaypoint`,`curhealth`,`curmana`,`DeathState`,`MovementType`) VALUES
 (4457369, 16294, 530, 1, 1, 0, 160, 8780.36, -6101.31, 72.6879, 3.2764, 25, 0, 0, 148, 825, 0, 0);
 
+DELETE FROM `creature_template_addon` WHERE (`entry`=16294);
+INSERT INTO `creature_template_addon` (`entry`, `mount`, `bytes1`, `b2_0_sheath`, `b2_1_pvp_state`, `emote`, `moveflags`, `auras`) VALUES (16294, 0, 0, 1, 16, 0, 0, '');
+
+DELETE FROM `creature_addon` WHERE (`guid`=4457369);
+INSERT INTO `creature_addon` (`guid`, `mount`, `bytes1`, `b2_0_sheath`, `b2_1_pvp_state`, `emote`, `moveflags`, `auras`) VALUES (4457369, 0, 0, 1, 16, 0, 0, '(NULL)');
+
 -- Quest Fix Noth Special Brew 
 UPDATE `quest_template` SET `SpecialFlags` = 1 WHERE `entry` = 12717; 
  
@@ -29,7 +35,7 @@ UPDATE `creature_template` SET `faction_A` = 16, `faction_H` = 16 WHERE `entry` 
 UPDATE `creature_template` SET `faction_A` = 16, `faction_H` = 16 WHERE `entry` = 15298;
 
 -- disable spell kill command 34260
-INSERT INTO `mangos`.`spell_disabled` (`entry`) VALUES ('34026 ');
+INSERT INTO `spell_disabled` (`entry`) VALUES ('34026 ');
 
 -- spell of light  = insight  
 UPDATE `spell_proc_event` SET `SchoolMask`='1', `procFlags`='4' WHERE `entry`='20165'; 
