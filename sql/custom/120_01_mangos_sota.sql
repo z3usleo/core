@@ -16,7 +16,8 @@ INSERT INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconNa
 (194086, 22, 8582, 'Seaforium Barrel', '', '', '', 29, 0, 2, 0, 0, 0, 0, 0, 0, 52415, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
 -- Demolisher
 UPDATE creature_template SET npcflag = 1, minlevel = 70, maxlevel = 70, minhealth = 50000, maxhealth = 89820, spell1 = 52338, spell2 = 60206, `ScriptName` = 'npc_sa_demolisher' WHERE entry = 28781;
-UPDATE creature_template SET npcflag = 1, difficulty_entry_1 = 0, minlevel = 80, maxlevel = 80, minhealth = 126000, maxhealth = 126000, spell1 = 52338, spell2 = 60206, `ScriptName` = 'npc_sa_demolisher' WHERE entry = 32796;
+UPDATE `creature_template` SET `difficulty_entry_1` = 0 WHERE `entry` = 28781;
+UPDATE creature_template SET npcflag = 1, minlevel = 80, maxlevel = 80, minhealth = 126000, maxhealth = 126000, spell1 = 52338, spell2 = 60206, `ScriptName` = 'npc_sa_demolisher' WHERE entry = 32796;
 DELETE FROM npc_spellclick_spells WHERE npc_entry = 28781;
 INSERT INTO npc_spellclick_spells VALUES (28781, 60968, 0, 0, 0, 0);
 -- AP Cannon
