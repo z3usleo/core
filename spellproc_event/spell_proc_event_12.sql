@@ -403,9 +403,10 @@ INSERT INTO spell_proc_event VALUES (67209, 0x00, 0x08, 0x00100000, 0x00100000, 
 DELETE FROM spell_proc_event WHERE entry = 70805;
 INSERT INTO spell_proc_event VALUES (70805, 0x00, 0x08, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0, 0, 0);
 
--- (70803) Item - Rogue T10 4P Bonus
-DELETE FROM spell_proc_event WHERE entry = 70803;
-INSERT INTO spell_proc_event VALUES (70803, 0x00, 0x08, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0, 0, 0);
+-- has exactly same custom chance as in spell.dbc, field value redundant thats why it commented out
+-- (70803) Item - Rogue T10 4P Bonus  
+--DELETE FROM `spell_proc_event` WHERE entry = 70803;
+--INSERT INTO `spell_proc_event` VALUES (70803, 0x00, 0x08, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0, 13, 0);
 
 -- (14186) Seal Fate
 DELETE FROM spell_proc_event WHERE entry = 14186;
