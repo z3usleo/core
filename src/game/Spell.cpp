@@ -1641,6 +1641,8 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67297:
                 case 67298:
                 case 68950:                                 // Fear
+                case 72385:                                 // Boiling Blood (10N)
+                case 72442:                                 // Boiling Blood (10H)
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
@@ -1663,6 +1665,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67700:                                 // Penetrating Cold (25 man)
                 case 68510:                                 // Penetrating Cold (25 man, heroic)
                     unMaxTargets = 5;
+                    break;
+                case 72441:                                 // Boiling Blood (25N)
+                case 72443:                                 // Boiling Blood (25H)
+                    unMaxTargets = 6;
                     break;
                 case 54098:                                 // Poison Bolt Volley (h)
                 case 54835:                                 // Curse of the Plaguebringer (h)
