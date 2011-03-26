@@ -1669,7 +1669,9 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67298:
                 case 63387:                                 // Rapid Burst 
                 case 64531:                                 // Rapid Burst
-                case 71340:                                 // Pact of darkfallen (hack for script work)				
+                case 71340:                                 // Pact of darkfallen (hack for script work)
+                case 72385:                                 // Boiling Blood (10N)
+                case 72442:                                 // Boiling Blood (10H)
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
@@ -1699,6 +1701,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                     unMaxTargets = 5;
                 case 61694:                                 // Arcane Storm(H) (25 man) (Malygos)
                     unMaxTargets = 7;
+                    break;
+                case 72441:                                 // Boiling Blood (25N)
+                case 72443:                                 // Boiling Blood (25H)
+                    unMaxTargets = 6;
                     break;
                 case 54098:                                 // Poison Bolt Volley (h)
                 case 54835:                                 // Curse of the Plaguebringer (h)
