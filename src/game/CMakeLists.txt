@@ -23,6 +23,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/vmap
   ${CMAKE_CURRENT_SOURCE_DIR}/playerbot
   ${CMAKE_SOURCE_DIR}/dep/include/g3dlite
+  ${CMAKE_CURRENT_SOURCE_DIR}/AuctionHouseBot
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation/Detour
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation/
   ${CMAKE_SOURCE_DIR}/dep/include

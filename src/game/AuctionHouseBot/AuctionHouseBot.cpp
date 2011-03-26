@@ -1262,7 +1262,7 @@ void AHB_Seller::addNewAuctions(AHB_Seller_Config& config)
     if (config.LastMissedItem > sAHB_BaseConfig.GetItemPerCycleBoost())
     {
         items=sAHB_BaseConfig.GetItemPerCycleBoost();
-        sLog.outString("AHBot> Boost value used to fill AH! (if this happens often adjust both ItemsPerCycle in mangosd.conf)");
+        sLog.outString("AHBot> Boost value used to fill AH! (if this happens often adjust both ItemsPerCycle in ahbot.conf)");
     }
     else items=sAHB_BaseConfig.GetItemPerCycleNormal();
 
