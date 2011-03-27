@@ -2958,7 +2958,7 @@ void SpellMgr::LoadSpellChains()
             }
 
             // in other case redundant
-            sLog.outErrorDb("Spell %u (prev: %u, first: %u, rank: %d, req: %u) already added (talent or spell ability with forward) and non need in `spell_chain`",
+            sLog.outErrorDb("Spell %u (prev: %u, first: %u, rank: %d, req: %u) already added (talent or spell ability with forward) and not need in `spell_chain`",
                 spell_id,node.prev,node.first,node.rank,node.req);
             continue;
         }
