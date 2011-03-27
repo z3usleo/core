@@ -615,8 +615,6 @@ class World
         char const* GetDBVersion() { return m_DBVersion.c_str(); }
         char const* GetCreatureEventAIVersion() { return m_CreatureEventAIVersion.c_str(); }
 
-        ACE_Thread_Mutex m_spellUpdateLock;
-
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
