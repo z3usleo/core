@@ -1329,6 +1329,7 @@ void World::SetInitialWorldSettings()
     sObjectMgr.ReturnOrDeleteOldMails(false);
 	
     // Loads the jail conf out of the database
+	sLog.outString( "Loading Jail.config from configs in Database..." );
     sObjectMgr.LoadJailConf();
 
     ///- Load and initialize scripts
