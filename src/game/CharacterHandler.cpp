@@ -39,7 +39,6 @@
 #include "Language.h"
 #include "mangchat/IRCClient.h"
 
-
 // Playerbot mod:
 #include "playerbot/PlayerbotMgr.h"
 
