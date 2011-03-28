@@ -275,6 +275,7 @@ void VehicleKit::RemovePassenger(Unit *passenger)
         m_pBase->SetCharmerGuid(ObjectGuid());
         m_pBase->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         m_pBase->clearUnitState(UNIT_STAT_CONTROLLED);
+        m_pBase->setFaction(((Creature*)m_pBase)->GetCreatureInfo()->faction_A);  // THIS NEED TO BE LIMITED TO DK STARTING AREA ONLY 
 
         if (passenger->GetTypeId() == TYPEID_PLAYER)
         {
