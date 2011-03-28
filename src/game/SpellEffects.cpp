@@ -9417,6 +9417,16 @@ void Spell::EffectKnockBack(SpellEffectIndex eff_idx)
 {
     if(!unitTarget)
         return;
+    
+    // Glyph of Typhoon
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_DRUID && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000001000000))
+        if (m_caster->HasAura(62135))
+            return;
+
+    // Glyph of Thunderstorm
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002000))
+        if (m_caster->HasAura(62132))
+            return;
 
     unitTarget->KnockBackFrom(m_caster,float(m_spellInfo->EffectMiscValue[eff_idx])/10,float(damage)/30);
 }
