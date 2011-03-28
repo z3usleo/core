@@ -587,7 +587,15 @@
 				RelativePath="..\..\src\shared\Database\SQLStorageImpl.h"
 				>
 			</File>
-			<Filter
+			<File
+				RelativePath="..\..\src\shared\Database\SqlPreparedStatement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\shared\Database\SqlPreparedStatement.h"
+				>
+			</File>
+ 			<Filter
 				Name="DataStores"
 				>
 				<File
@@ -633,14 +641,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\shared\Errors.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\shared\MemoryLeaks.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\shared\MemoryLeaks.h"
 				>
 			</File>
 			<File
