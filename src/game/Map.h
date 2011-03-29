@@ -41,7 +41,7 @@
 #include <list>
 #include <set>
 
-#include "../recastnavigation/Detour/Include/DetourNavMesh.h"
+#include "../../dep/recastnavigation/Detour/Include/DetourNavMesh.h"
 
 class Creature;
 class Unit;
