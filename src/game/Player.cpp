@@ -2836,7 +2836,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
     SetUInt32Value(PLAYER_FIELD_MOD_HEALING_DONE_POS,0);
     for (int i = 0; i < MAX_SPELL_SCHOOL; ++i)
     {
-        SetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG+i, 0);
+        SetInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG+i, 0);
         SetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS+i, 0);
         SetFloatValue(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT+i, 1.00f);
     }
@@ -15960,8 +15960,8 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
 
     SetFloatValue(UNIT_FIELD_HOVERHEIGHT, 1.0f);
 
-    // just load creteria/achievment data, safe call before any load, and need, because some spell/item/quest loading
-    // can triggering achievment creteria update that will be lost if this call will later
+    // just load criteria/achievement data, safe call before any load, and need, because some spell/item/quest loading
+    // can triggering achievement criteria update that will be lost if this call will later
     m_achievementMgr.LoadFromDB(holder->GetResult(PLAYER_LOGIN_QUERY_LOADACHIEVEMENTS), holder->GetResult(PLAYER_LOGIN_QUERY_LOADCRITERIAPROGRESS));
 
     uint32 money = fields[8].GetUInt32();
