@@ -149,8 +149,7 @@ ObjectMgr::ObjectMgr() :
     m_EquipmentSetIds("Equipment set ids"),
     m_GuildIds("Guild ids"),
     m_MailIds("Mail ids"),
-    m_PetNumbers("Pet numbers"),
-    m_GroupIds("Group ids")
+    m_PetNumbers("Pet numbers")
 {
     // Only zero condition left, others will be added while loading DB tables
     mConditions.resize(1);
@@ -194,7 +193,8 @@ ObjectMgr::~ObjectMgr()
 
 Group* ObjectMgr::GetGroupById(uint32 id) const
 {
-    GroupMap::const_iterator itr = mGroupMap.find(id);
+    ObjectGuid guid(HIGHGUID_GROUP,id);
+    GroupMap::const_iterator itr = mGroupMap.find(guid);
     if (itr != mGroupMap.end())
         return itr->second;
 
@@ -3917,8 +3917,30 @@ void ObjectMgr::LoadGroups()
                 sLog.outErrorDb("ObjectMgr::Wrong reset time in group_instance corrected to: %d", resetTime);
             }
 
-            DungeonPersistentState *state = (DungeonPersistentState*)sMapPersistentStateMgr.AddPersistentState(mapEntry, fields[2].GetUInt32(), Difficulty(diff), (time_t)resetTime, (fields[6].GetUInt32() == 0), true, true, encountersMask);
-            group->BindToInstance(state, fields[3].GetBool(), true);
+            if (resetTime < (time(NULL)))
+            {
+                DEBUG_LOG("ObjectMgr::Loading extended instance for player: %d", leaderGuidLow);
+                bool isExtended = false;
+                QueryResult* result1 = CharacterDatabase.PQuery("SELECT COUNT(guid) FROM character_instance WHERE instance = '%u' AND extend = 1 ", fields[1].GetUInt32());
+                if (result1)
+                {
+                    Field *fields1=result->Fetch();
+                    isExtended = fields1[0].GetBool();
+                    delete result1;
+                }
+
+                MapDifficultyEntry const* mapDiff = GetMapDifficultyData(mapId,diff);
+                resetTime = DungeonResetScheduler::CalculateNextResetTime(mapDiff, time(NULL));
+                DungeonPersistentState* state = (DungeonPersistentState*)sMapPersistentStateMgr.AddPersistentState(mapEntry, fields[2].GetUInt32(), Difficulty(diff), (time_t)resetTime, (fields[6].GetUInt32() == 0), true, true, encountersMask);
+                state->SetExtended(isExtended);
+                group->BindToInstance(state, true && isExtended);
+            }
+            else
+            {
+                DungeonPersistentState *state = (DungeonPersistentState*)sMapPersistentStateMgr.AddPersistentState(mapEntry, fields[2].GetUInt32(), Difficulty(diff), (time_t)resetTime, (fields[6].GetUInt32() == 0), true, true, encountersMask);
+                group->BindToInstance(state, fields[3].GetBool(), true);
+            }
+
         }while( result->NextRow() );
         delete result;
     }
@@ -5837,66 +5859,6 @@ AreaTrigger const* ObjectMgr::GetMapEntranceTrigger(uint32 Map) const
     return NULL;
 }
 
-void ObjectMgr::PackGroupIds()
-{
-    // this routine renumbers groups in such a way so they start from 1 and go up
-
-    // obtain set of all groups
-    std::set<uint32> groupIds;
-
-    // all valid ids are in the instance table
-    // any associations to ids not in this table are assumed to be
-    // cleaned already in CleanupInstances
-    QueryResult *result = CharacterDatabase.Query("SELECT groupId FROM groups");
-    if( result )
-    {
-        do
-        {
-            Field *fields = result->Fetch();
-
-            uint32 id = fields[0].GetUInt32();
-
-            if (id == 0)
-            {
-                CharacterDatabase.BeginTransaction();
-                CharacterDatabase.PExecute("DELETE FROM groups WHERE groupId = '%u'", id);
-                CharacterDatabase.PExecute("DELETE FROM group_member WHERE groupId = '%u'", id);
-                CharacterDatabase.CommitTransaction();
-                continue;
-            }
-
-            groupIds.insert(id);
-        }
-        while (result->NextRow());
-        delete result;
-    }
-
-    barGoLink bar( groupIds.size() + 1);
-    bar.step();
-
-    uint32 groupId = 1;
-    // we do assume std::set is sorted properly on integer value
-    for (std::set<uint32>::iterator i = groupIds.begin(); i != groupIds.end(); ++i)
-    {
-        if (*i != groupId)
-        {
-            // remap group id
-            CharacterDatabase.BeginTransaction();
-            CharacterDatabase.PExecute("UPDATE groups SET groupId = '%u' WHERE groupId = '%u'", groupId, *i);
-            CharacterDatabase.PExecute("UPDATE group_member SET groupId = '%u' WHERE groupId = '%u'", groupId, *i);
-            CharacterDatabase.CommitTransaction();
-        }
-
-        ++groupId;
-        bar.step();
-    }
-
-    m_GroupIds.Set(groupId);
-
-    sLog.outString( ">> Group Ids remapped, next group id is %u", groupId );
-    sLog.outString();
-}
-
 void ObjectMgr::SetHighestGuids()
 {
     QueryResult *result = CharacterDatabase.Query( "SELECT MAX(guid) FROM characters" );
@@ -5987,7 +5949,7 @@ void ObjectMgr::SetHighestGuids()
     result = CharacterDatabase.Query( "SELECT MAX(groupId) FROM groups" );
     if (result)
     {
-        m_GroupIds.Set((*result)[0].GetUInt32()+1);
+        m_GroupGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 }
@@ -9118,12 +9080,12 @@ void ObjectMgr::RemoveGuild( uint32 Id )
 
 void ObjectMgr::AddGroup( Group* group )
 {
-    mGroupMap[group->GetId()] = group ;
+    mGroupMap[group->GetObjectGuid()] = group ;
 }
 
 void ObjectMgr::RemoveGroup( Group* group )
 {
-    mGroupMap.erase(group->GetId());
+    mGroupMap.erase(group->GetObjectGuid());
 }
 
 void ObjectMgr::AddArenaTeam( ArenaTeam* arenaTeam )

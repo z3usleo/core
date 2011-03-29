@@ -1031,17 +1031,16 @@ struct HolidayNamesEntry
 struct HolidaysEntry
 {
     uint32 ID;                                              // 0, holiday id
-    //uint32 unk1;                                          // 1
-    //uint32 unk2;                                          // 2
-    //uint32 unk3[8]                                        // 3-10, empty fields
-    //uint32 unk11[13]                                      // 11-23, some unknown data (bit strings?)
-    //uint32 unk11[13]                                      // 24-36, some empty fields (continue prev?)
-    //uint32 unk11[12]                                      // 37-48, counters?
+    //uint32 unk1[10];                                      // 1-10 timers
+    //uint32 Dates[26];                                     // 11-36, dates in unix time starting at January, 1, 2000
+    //uint32 unk37;                                         // 37, flags (wow region mask?)
+    //uint32 unk38;                                         // 38, flags (display related?)
+    //uint32 unk39[10];                                     // 39-48, counters?
     //uint32 holidayNameId;                                 // 49, id for HolidayNames.dbc
     //uint32 holidayDescriptionId;                          // 50, id for HolidayDescriptions.dbc
-    //uint32 unk51;                                         // 51
+    //char *texture;                                        // 51
     //uint32 unk52;                                         // 52
-    //uint32 unk53;                                         // 53
+    //uint32 RepeatingMethod;                               // 53, (-1,0,1 or 2)
     //uint32 unk54;                                         // 54
 };
 
@@ -1140,6 +1139,31 @@ struct ItemSetEntry
     uint32    required_skill_id;                            // 51       m_requiredSkill
     uint32    required_skill_value;                         // 52       m_requiredSkillRank
 };
+
+struct LFGDungeonEntry
+{
+    uint32  ID;                                             // 0
+    //char*   name[16];                                     // 1-17 Name lang
+    uint32  minlevel;                                       // 18
+    uint32  maxlevel;                                       // 19
+    uint32  reclevel;                                       // 20
+    uint32  recminlevel;                                    // 21
+    uint32  recmaxlevel;                                    // 22
+    uint32  map;                                            // 23
+    uint32  difficulty;                                     // 24
+    //uint32  unk;                                          // 25
+    uint32  type;                                           // 26
+    //uint32  unk2;                                         // 27
+    //char*   unk3;                                         // 28
+    uint32  expansion;                                      // 29
+    //uint32  unk4;                                         // 30
+    uint32  grouptype;                                      // 31
+    //char*   desc[16];                                     // 32-47 Description
+    //uint32 unk5                                           // 48 language flags?
+    // Helpers
+    uint32 Entry() const { return ID + (type << 24); }
+};
+
 
 #define MAX_LOCK_CASE 8
 

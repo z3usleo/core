@@ -333,7 +333,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     case 72624: case 72625:                 // Ooze Eruption
                     {
                         uint32 count = 0;
-                        for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
+                        for(TargetList::const_iterator ihit = m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
                             if(ihit->effectMask & (1<<effect_idx))
                                 ++count;
 
@@ -2260,12 +2260,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     const uint32 spellShrink = 53805;
                     const uint32 spellTransf = 53806;
 
-                    if (Aura* pAura = m_caster->GetAura(spellShrink, EFFECT_INDEX_0))
+                    if (SpellAuraHolder* holder = m_caster->GetSpellAuraHolder(spellShrink))
                     {
-                        uint32 stackNum = pAura->GetStackAmount();
-
                         // chance to become pygmified (5, 10, 15 etc)
-                        if (roll_chance_i(stackNum*5))
+                        if (roll_chance_i(holder->GetStackAmount() * 5))
                         {
                             m_caster->RemoveAurasDueToSpell(spellShrink);
                             m_caster->CastSpell(m_caster, spellTransf, true);
@@ -2273,7 +2271,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         }
                     }
 
-                    if (m_caster->HasAura(spellTransf, EFFECT_INDEX_0))
+                    if (m_caster->HasAura(spellTransf))
                         return;
 
                     m_caster->CastSpell(m_caster, spellShrink, true);
@@ -2407,6 +2405,23 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         }
                     return;
                 }
+                case 62105:                                 // To'kini's Blowgun
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    // Sleeping Sleep
+                    unitTarget->CastSpell(unitTarget, 62248, true);
+
+                    // Although not really correct, it's needed to have access to m_caster later,
+                    // to properly process spell 62110 (cast from gossip).
+                    // Can possibly be replaced with a similar function that doesn't set any dynamic flags.
+                    ((Creature*)unitTarget)->SetLootRecipient(m_caster);
+
+                    unitTarget->setFaction(190);            // Ambient (neutral)
+                    unitTarget->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                    return;
+                }
                 case 64385:                                 // Spinning (from Unusual Compass)
                 {
                     m_caster->SetFacingTo(frand(0, M_PI_F*2), true);
@@ -2525,10 +2540,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             Player* creditedPlayer = unitTarget->GetCharmerOrOwnerPlayerOrPlayerItself();
                             DungeonMap* dungeon = (DungeonMap*)m_caster->GetMap();;
                             if (DungeonPersistentState* state = dungeon->GetPersistanceState())
-                            {
-                                dungeon->PermBindAllPlayers(creditedPlayer);
                                 state->UpdateEncounterState(ENCOUNTER_CREDIT_CAST_SPELL, m_spellInfo->Id, creditedPlayer);
-                            }
                         }
                     }
                 }
@@ -3062,7 +3074,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     // Righteous Defense (step 2) (in old version 31980 dummy effect)
                     // Clear targets for eff 1
-                    for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
+                    for(TargetList::iterator ihit = m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
                         ihit->effectMask &= ~(1<<1);
 
                     // not empty (checked), copy
@@ -6154,7 +6166,7 @@ void Spell::EffectWeaponDmg(SpellEffectIndex eff_idx)
                 case 71021:                                 // Saber Lash
                 {
                     uint32 count = 0;
-                    for(std::list<TargetInfo>::iterator ihit = m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
+                    for(TargetList::const_iterator ihit = m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
                         if(ihit->effectMask & (1<<eff_idx))
                             ++count;
 
@@ -6563,6 +6575,9 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
 
     // Wild object not have owner and check clickable by players
     map->Add(pGameObj);
+
+    // Store the GO to the caster
+    m_caster->AddWildGameObject(pGameObj);
 
     if(pGameObj->GetGoType() == GAMEOBJECT_TYPE_FLAGDROP && m_caster->GetTypeId() == TYPEID_PLAYER)
     {
@@ -9394,6 +9409,16 @@ void Spell::EffectKnockBack(SpellEffectIndex eff_idx)
 {
     if(!unitTarget)
         return;
+    
+    // Glyph of Typhoon
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_DRUID && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000001000000))
+        if (m_caster->HasAura(62135))
+            return;
+
+    // Glyph of Thunderstorm
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002000))
+        if (m_caster->HasAura(62132))
+            return;
 
     unitTarget->KnockBackFrom(m_caster,float(m_spellInfo->EffectMiscValue[eff_idx])/10,float(damage)/30);
 }

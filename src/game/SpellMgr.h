@@ -86,6 +86,7 @@ enum SpellSpecific
     SPELL_UA_IMMOLATE       = 23,                           // Unstable Affliction and Immolate
     SPELL_BLEED_DEBUFF      = 24,                           // Mangle and Trauma
     SPELL_MAGE_INTELLECT    = 25,
+	SPELL_SCROLL            = 30,
 };
 
 SpellSpecific GetSpellSpecific(uint32 spellId);
@@ -242,7 +243,7 @@ inline bool IsNonCombatSpell(SpellEntry const *spellInfo)
 }
 
 bool IsPositiveSpell(uint32 spellId);
-bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex);
+bool IsPositiveEffect(SpellEntry const *spellInfo, SpellEffectIndex effIndex);
 bool IsPositiveTarget(uint32 targetA, uint32 targetB);
 
 bool IsExplicitPositiveTarget(uint32 targetA);

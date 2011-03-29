@@ -287,7 +287,9 @@ enum UnitModifierType
     BASE_PCT = 1,
     TOTAL_VALUE = 2,
     TOTAL_PCT = 3,
-    MODIFIER_TYPE_END = 4
+    NONSTACKING_VALUE = 4,
+    NONSTACKING_PCT = 5,
+    MODIFIER_TYPE_END = 6
 };
 
 enum WeaponDamageRange
@@ -359,6 +361,7 @@ enum BaseModGroup
     RANGED_CRIT_PERCENTAGE,
     OFFHAND_CRIT_PERCENTAGE,
     SHIELD_BLOCK_VALUE,
+    NONSTACKING_CRIT_PERCENTAGE,
     BASEMOD_END
 };
 
@@ -1606,6 +1609,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         void _AddAura(uint32 spellID, uint32 duration = 60000);
 
+        float CheckAuraStackingAndApply(Aura *Aur, UnitMods unitMod, UnitModifierType modifierType, float amount, bool apply, int32 miscMask = 0, int32 miscValue = 0);
+
         // removing specific aura stack
         void RemoveAura(Aura* aura, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
         void RemoveAura(uint32 spellId, SpellEffectIndex effindex, Aura* except = NULL);
@@ -1636,21 +1641,34 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void RemoveAllAurasOnDeath();
 
         // removing specific aura FROM stack by diff reasons and selections
-        void RemoveAuraHolderFromStack(uint32 spellId, int32 stackAmount = 1, uint64 casterGUID = 0, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        void RemoveAuraHolderDueToSpellByDispel(uint32 spellId, int32 stackAmount, uint64 casterGUID, Unit *dispeler);
+        void RemoveAuraHolderFromStack(uint32 spellId, uint32 stackAmount = 1, uint64 casterGUID = 0, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
+        void RemoveAuraHolderDueToSpellByDispel(uint32 spellId, uint32 stackAmount, uint64 casterGUID, Unit *dispeller);
 
         void DelaySpellAuraHolder(uint32 spellId, int32 delaytime, uint64 casterGUID);
 
         float GetResistanceBuffMods(SpellSchools school, bool positive) const { return GetFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school ); }
         void SetResistanceBuffMods(SpellSchools school, bool positive, float val) { SetFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school,val); }
-        void ApplyResistanceBuffModsMod(SpellSchools school, bool positive, float val, bool apply) { ApplyModSignedFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply); }
-        void ApplyResistanceBuffModsPercentMod(SpellSchools school, bool positive, float val, bool apply) { ApplyPercentModFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply); }
+        void ApplyResistanceBuffModsMod(SpellSchools school, float val, bool apply) 
+        {
+            val *= GetModifierValue(UnitMods(UNIT_MOD_RESISTANCE_START+school), TOTAL_PCT);
+            ApplyModSignedFloatValue((val > 0 ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school), val, apply);
+        }
+        void ApplyResistanceBuffModsPercentMod(SpellSchools school, float val, bool apply)
+        {
+            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school, val, apply);
+            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply);
+        }
+
         void InitStatBuffMods()
         {
             for(int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(UNIT_FIELD_POSSTAT0+i, 0);
             for(int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(UNIT_FIELD_NEGSTAT0+i, 0);
         }
-        void ApplyStatBuffMod(Stats stat, float val, bool apply) { ApplyModSignedFloatValue((val > 0 ? UNIT_FIELD_POSSTAT0+stat : UNIT_FIELD_NEGSTAT0+stat), val, apply); }
+        void ApplyStatBuffMod(Stats stat, float val, bool apply) 
+        {
+            val *= GetModifierValue(UnitMods(UNIT_MOD_STAT_STRENGTH+stat), TOTAL_PCT);
+            ApplyModSignedFloatValue((val > 0 ? UNIT_FIELD_POSSTAT0+stat : UNIT_FIELD_NEGSTAT0+stat), val, apply);
+        }
         void ApplyStatPercentBuffMod(Stats stat, float val, bool apply)
         {
             ApplyPercentModFloatValue(UNIT_FIELD_POSSTAT0+stat, val, apply);
@@ -1713,7 +1731,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         int32 m_baseSpellCritChance;
 
         float m_threatModifier[MAX_SPELL_SCHOOL];
-        float m_modAttackSpeedPct[3];
+        float m_modAttackSpeedPct[MAX_ATTACK + 2];
 
         // Event handler
         EventProcessor m_Events;
@@ -1780,7 +1798,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void removeHatedBy(HostileReference* /*pHostileReference*/ ) { /* nothing to do yet */ }
         HostileRefManager& getHostileRefManager() { return m_HostileRefManager; }
 
-        uint32 GetVisibleAura(uint8 slot)
+        uint32 GetVisibleAura(uint8 slot) const
         {
             VisibleAuraMap::const_iterator itr = m_visibleAuras.find(slot);
             if(itr != m_visibleAuras.end())
@@ -1794,8 +1812,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
             else
                 m_visibleAuras[slot] = spellid;
         }
-        VisibleAuraMap const *GetVisibleAuras() { return &m_visibleAuras; }
-        uint8 GetVisibleAurasCount() { return m_visibleAuras.size(); }
+        VisibleAuraMap const& GetVisibleAuras() const { return m_visibleAuras; }
+        uint8 GetVisibleAurasCount() const { return m_visibleAuras.size(); }
 
         Aura* GetAura(uint32 spellId, SpellEffectIndex effindex);
         Aura* GetAura(AuraType type, SpellFamily family, uint64 familyFlag, uint32 familyFlag2 = 0, ObjectGuid casterGuid = ObjectGuid());
@@ -1808,18 +1826,18 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         int32 GetTotalAuraModifier(AuraType auratype) const;
         float GetTotalAuraMultiplier(AuraType auratype) const;
-        int32 GetMaxPositiveAuraModifier(AuraType auratype) const;
-        int32 GetMaxNegativeAuraModifier(AuraType auratype) const;
+        int32 GetMaxPositiveAuraModifier(AuraType auratype, bool nonStackingOnly = false) const;
+        int32 GetMaxNegativeAuraModifier(AuraType auratype, bool nonStackingOnly = false) const;
 
         int32 GetTotalAuraModifierByMiscMask(AuraType auratype, uint32 misc_mask) const;
         float GetTotalAuraMultiplierByMiscMask(AuraType auratype, uint32 misc_mask) const;
-        int32 GetMaxPositiveAuraModifierByMiscMask(AuraType auratype, uint32 misc_mask) const;
-        int32 GetMaxNegativeAuraModifierByMiscMask(AuraType auratype, uint32 misc_mask) const;
+        int32 GetMaxPositiveAuraModifierByMiscMask(AuraType auratype, uint32 misc_mask, bool nonStackingOnly = false) const;
+        int32 GetMaxNegativeAuraModifierByMiscMask(AuraType auratype, uint32 misc_mask, bool nonStackingOnly = false) const;
 
         int32 GetTotalAuraModifierByMiscValue(AuraType auratype, int32 misc_value) const;
         float GetTotalAuraMultiplierByMiscValue(AuraType auratype, int32 misc_value) const;
-        int32 GetMaxPositiveAuraModifierByMiscValue(AuraType auratype, int32 misc_value) const;
-        int32 GetMaxNegativeAuraModifierByMiscValue(AuraType auratype, int32 misc_value) const;
+        int32 GetMaxPositiveAuraModifierByMiscValue(AuraType auratype, int32 misc_value, bool nonStackingOnly = false) const;
+        int32 GetMaxNegativeAuraModifierByMiscValue(AuraType auratype, int32 misc_value, bool nonStackingOnly = false) const;
 
         // misc have plain value but we check it fit to provided values mask (mask & (1 << (misc-1)))
         float GetTotalAuraMultiplierByMiscValueForMask(AuraType auratype, uint32 mask) const;
@@ -1847,6 +1865,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         GameObject* GetGameObject(uint32 spellId) const;
         void AddGameObject(GameObject* gameObj);
+        void AddWildGameObject(GameObject* gameObj);
         void RemoveGameObject(GameObject* gameObj, bool del);
         void RemoveGameObject(uint32 spellid, bool del);
         void RemoveAllGameObjects();
@@ -2074,6 +2093,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         typedef std::list<GameObject*> GameObjectList;
         GameObjectList m_gameObj;
+        typedef std::map<uint32, ObjectGuid> WildGameObjectMap;
+        WildGameObjectMap m_wildGameObjs;
         bool m_isSorted;
         uint32 m_transform;
 

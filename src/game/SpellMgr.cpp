@@ -382,6 +382,10 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
                 // SpellIcon 2560 is Spell 46687, does not have this flag
                 if ((spellInfo->AttributesEx2 & SPELL_ATTR_EX2_FOOD_BUFF) || spellInfo->SpellIconID == 2560)
                     return SPELL_WELL_FED;
+
+                else if (spellInfo->EffectApplyAuraName[EFFECT_INDEX_0] == SPELL_AURA_MOD_STAT &&  spellInfo->Attributes & SPELL_ATTR_NOT_SHAPESHIFT &&
+                     spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NATURE && spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
+                     return SPELL_SCROLL;
             }
             break;
         }
@@ -628,22 +632,39 @@ bool IsExplicitNegativeTarget(uint32 targetA)
     return false;
 }
 
-bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
+bool IsPositiveEffect(SpellEntry const *spellproto, SpellEffectIndex effIndex)
 {
-    SpellEntry const *spellproto = sSpellStore.LookupEntry(spellId);
     if (!spellproto)
         return false;
+
+    switch(spellproto->Id)
+    {
+        case 47540:                                         // Penance start dummy aura - Rank 1
+        case 53005:                                         // Penance start dummy aura - Rank 2
+        case 53006:                                         // Penance start dummy aura - Rank 3
+        case 53007:                                         // Penance start dummy aura - Rank 4
+        case 47757:                                         // Penance heal effect trigger - Rank 1
+        case 52986:                                         // Penance heal effect trigger - Rank 2
+        case 52987:                                         // Penance heal effect trigger - Rank 3
+        case 52988:                                         // Penance heal effect trigger - Rank 4
+        case 64844:                                         // Divine Hymn
+        case 64904:                                         // Hymn of Hope
+        return true;
+        default:
+            break;
+    }
 
     switch(spellproto->Effect[effIndex])
     {
         case SPELL_EFFECT_DUMMY:
             // some explicitly required dummy effect sets
-            switch(spellId)
+            switch(spellproto->Id)
             {
                 case 28441:                                 // AB Effect 000
                     return false;
                 case 49634:                                 // Sergeant's Flare
                 case 54530:                                 // Opening
+                case 62105:                                 // To'kini's Blowgun
                     return true;
                 default:
                     break;
@@ -716,7 +737,7 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                 case SPELL_AURA_ADD_TARGET_TRIGGER:
                     return true;
                 case SPELL_AURA_PERIODIC_TRIGGER_SPELL:
-                    if (spellId != spellproto->EffectTriggerSpell[effIndex])
+                    if (spellproto->Id != spellproto->EffectTriggerSpell[effIndex])
                     {
                         uint32 spellTriggeredId = spellproto->EffectTriggerSpell[effIndex];
                         SpellEntry const *spellTriggeredProto = sSpellStore.LookupEntry(spellTriggeredId);
@@ -728,8 +749,8 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                             {
                                 // if non-positive trigger cast targeted to positive target this main cast is non-positive
                                 // this will place this spell auras as debuffs
-                                if (IsPositiveTarget(spellTriggeredProto->EffectImplicitTargetA[effIndex],spellTriggeredProto->EffectImplicitTargetB[effIndex]) &&
-                                    !IsPositiveEffect(spellTriggeredId,SpellEffectIndex(i)))
+                                if (IsPositiveTarget(spellTriggeredProto->EffectImplicitTargetA[effIndex], spellTriggeredProto->EffectImplicitTargetB[effIndex]) &&
+                                    !IsPositiveEffect(spellTriggeredProto, SpellEffectIndex(i)))
                                     return false;
                             }
                         }
@@ -883,7 +904,7 @@ bool IsPositiveSpell(uint32 spellId)
     // spells with at least one negative effect are considered negative
     // some self-applied spells have negative effects but in self casting case negative check ignored.
     for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
-        if (!IsPositiveEffect(spellId, SpellEffectIndex(i)))
+        if (spellproto->Effect[i] && !IsPositiveEffect(spellproto, SpellEffectIndex(i)))
             return false;
     return true;
 }
@@ -1981,6 +2002,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     // Dragonmaw Illusion (multi-family check)
                     if (spellId_1 == 40216 && spellId_2 == 42016)
                         return false;
+                    
+                    // Drums of the Wild and Gift of the Wild
+                    if( spellInfo_1->Id == 72588 && spellInfo_2->SpellFamilyFlags & UI64LIT(0x40000))
+                        return true;
 
                     break;
                 }
@@ -2015,6 +2040,19 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     // *Band of Eternal Champion and Seal of Command(multi-family check)
                     if (spellId_1 == 35081 && spellInfo_2->SpellIconID==561 && spellInfo_2->SpellVisual[0]==7992)
                         return false;
+                    // Drums of Forgotten Kings and Blessing of Kings
+                    if( spellInfo_1->Id == 72586 && spellInfo_2->SpellFamilyFlags & UI64LIT(0x10000000))
+                        return true;
+                }
+                case SPELLFAMILY_PRIEST:
+                {
+                    // Frenzy (Grand Widow Faerlina) and Mind Trauma
+                    if( spellInfo_1->SpellIconID == 95 && spellInfo_2->SpellFamilyFlags & UI64LIT(0x84000000))
+                        return false;
+
+                    // Runescroll of Fortitude and Power Word: Fortitude
+                    if( spellInfo_1->Id == 72590 && spellInfo_2->SpellFamilyFlags & UI64LIT(0x8))
+                        return true;
                 }
             }
             // Dragonmaw Illusion, Blood Elf Illusion, Human Illusion, Illidari Agent Illusion, Scarlet Crusade Disguise
@@ -2169,6 +2207,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellInfo_2->SpellIconID == 321 && spellInfo_1->SpellIconID == 329))
                     return false;
             }
+             // Power Word: Fortitude and Runescroll of Fortitude
+            if( spellInfo_1->SpellFamilyFlags & UI64LIT(0x8) && spellInfo_2->Id == 72590 )
+                return true;
             break;
         case SPELLFAMILY_DRUID:
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_DRUID)
@@ -2234,6 +2275,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // Dragonmaw Illusion (multi-family check)
             if (spellId_1 == 42016 && spellId_2 == 40216 )
                 return false;
+            
+            // Gift of the Wild and Drums of the Wild
+            if( spellInfo_1->SpellFamilyFlags & UI64LIT(0x40000) && spellInfo_2->Id == 72588)
+                return true;
 
             break;
         case SPELLFAMILY_ROGUE:
@@ -2378,6 +2423,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // *Seal of Command and Band of Eternal Champion (multi-family check)
             if (spellInfo_1->SpellIconID==561 && spellInfo_1->SpellVisual[0]==7992 && spellId_2 == 35081)
                 return false;
+
+            // Blessing of Kings and Drums of Forgotten Kings
+            if( spellInfo_1->SpellFamilyFlags & UI64LIT(0x10000000) && spellInfo_2->Id == 72586)
+                return true;
             break;
 
         case SPELLFAMILY_SHAMAN:
@@ -2559,7 +2608,7 @@ SpellEntry const* SpellMgr::SelectAuraRankForLevel(SpellEntry const* spellInfo, 
             IsAreaEffectPossitiveTarget(Targets(spellInfo->EffectImplicitTargetA[i])))) ||
             spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_PARTY ||
             spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_RAID) &&
-            IsPositiveEffect(spellInfo->Id, SpellEffectIndex(i)))
+            IsPositiveEffect(spellInfo, SpellEffectIndex(i)))
         {
             needRankSelection = true;
             break;
