@@ -1088,6 +1088,7 @@
     </ClInclude>
     <ClInclude Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.h">
       <Filter>AuctionHouseBot</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\game\mangchat\IRCClient.h">
       <Filter>IRC</Filter>
     </ClInclude>
