@@ -273,9 +273,6 @@ void Spell::EffectInstaKill(SpellEffectIndex /*eff_idx*/)
     if (!unitTarget || !unitTarget->isAlive())
         return;
 
-    if(m_spellInfo->Id==52479 && unitTarget->GetTypeId()==TYPEID_PLAYER)
-        return;
-
     if (m_caster == unitTarget)                              // prevent interrupt message
         finish();
 
@@ -7470,12 +7467,13 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, m_spellInfo->EffectBasePoints[eff_idx]+1, true);
                     break;
                 }
-                case 52479:                                 // The Gift That Keeps On Giving - trigger Scarlet Miner Ghoul Transform
+                case 52479:                                 // The Gift That Keeps On Giving
                 {
-                    if (m_caster->GetTypeId() != TYPEID_PLAYER || unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    if (!m_caster || !unitTarget)
                         return;
 
-                    m_caster->CastSpell(m_caster, m_spellInfo->EffectBasePoints[eff_idx]+1, true);
+                    m_caster->CastSpell(m_caster, roll_chance_i(75) ? 52505 : m_spellInfo->EffectBasePoints[eff_idx]+1, true);
+                    ((Creature*)unitTarget)->ForcedDespawn();
                     break;
                 }
                 case 52694:                                 // Recall Eye of Acherus
@@ -7943,6 +7941,15 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         }
                     }
                 return;
+                }
+                case 66336:                                 // Mistress' Kiss (Trial of the Crusader, ->
+                case 67076:                                 // -> Lord Jaraxxus encounter, all difficulties)
+                case 67077:                                 // ----- // -----
+                case 67078:                                 // ----- // -----
+                {
+                    if (unitTarget)
+                        unitTarget->CastSpell(unitTarget, 66334, true);
+                    return;
                 }
                 case 70117:                                 // Ice grip (Sindragosa pull effect)
                 {
