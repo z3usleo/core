@@ -1854,9 +1854,9 @@ namespace MaNGOS
                 {
                     x = c->GetPositionX();
                     y = c->GetPositionY();
-                }
 
-                add(c,x,y);
+                    add(c,x,y);
+                }
             }
 
             template<class T>
