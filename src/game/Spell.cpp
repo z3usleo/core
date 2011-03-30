@@ -1671,8 +1671,6 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67296:
                 case 67297:
                 case 67298:
-                case 63387:                                 // Rapid Burst 
-                case 64531:                                 // Rapid Burst
                 case 71340:                                 // Pact of darkfallen (hack for script work)
                 case 72385:                                 // Boiling Blood (10N)
                 case 72442:                                 // Boiling Blood (10H)
