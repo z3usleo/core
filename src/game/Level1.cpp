@@ -598,6 +598,7 @@ bool ChatHandler::HandleGonameCommand(char* args)
         // to point to see at target with same orientation
         float x,y,z;
         target->GetContactPoint(_player,x,y,z);
+        z += 4.0f; // a bit higher to avoid falling through map
 
         _player->TeleportTo(target->GetMapId(), x, y, z, _player->GetAngle(target), TELE_TO_GM_MODE);
     }
@@ -618,6 +619,7 @@ bool ChatHandler::HandleGonameCommand(char* args)
         if (!Player::LoadPositionFromDB(target_guid, map,x,y,z,o,in_flight))
             return false;
 
+        z += 4.0f; // a bit higher to avoid falling through map
         return HandleGoHelper(_player, map, x, y, &z);
     }
 
@@ -642,7 +644,8 @@ bool ChatHandler::HandleRecallCommand(char* args)
         return false;
     }
 
-    return HandleGoHelper(target, target->m_recallMap, target->m_recallX, target->m_recallY, &target->m_recallZ, &target->m_recallO);
+    float z = target->m_recallZ + 4.0f; // a bit higher to avoid falling through map
+    return HandleGoHelper(target, target->m_recallMap, target->m_recallX, target->m_recallY, &z, &target->m_recallO);
 }
 
 //Edit Player HP
