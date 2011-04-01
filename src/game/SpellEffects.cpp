@@ -2734,23 +2734,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // Return Tempered Quel'Delar
                     unitTarget->CastSpell(m_caster, 69956, true);
                     return;
-                }
-                case 62262:                  // Brightleaf Flux 
-                { 
-                    if(!unitTarget) 
-                       return; 
- 
-                     uint32 spellId = urand(0,1) ? 62251 : 62252; 
-                     m_caster->CastSpell(unitTarget, spellId, true); 
-                     return; 
-                }
-                case 62217: 
-                case 62922:                  // Unstable Energy - Unstable Sun Beam remove part 
+                } 
+                /*case 62922:                  // Unstable Energy - Unstable Sun Beam remove part 
                 { 
                     if(m_caster) 
                     m_caster->RemoveAurasDueToSpell(m_spellInfo->EffectBasePoints[eff_idx] + 1); 
                     return; 
-                }
+                }*/ // unsure how this is going to work with upcoming rsa commits  will need testing and ect 
                 case 62688:                  // Summon Wave - 10 Mob 
                 { 
                     for(int8 i = 0; i < 12; i++) 
