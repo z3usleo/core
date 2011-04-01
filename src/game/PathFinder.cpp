@@ -51,8 +51,8 @@ PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, cons
 
     createFilter();
 
-    if (m_navMesh && m_navMeshQuery && HaveTiles(endPoint) &&
-            !m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) && !(m_sourceUnit->GetTypeId() == TYPEID_UNIT ? ((Creature*)m_sourceUnit)->IsWorldBoss() : false))
+    if (m_navMesh && m_navMeshQuery && HaveTiles(endPoint) && !m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) &&
+        !(m_sourceUnit->GetTypeId() == TYPEID_UNIT ? ((Creature*)m_sourceUnit)->IsWorldBoss() : false))
     {
         BuildPolyPath(startPoint, endPoint);
     }
