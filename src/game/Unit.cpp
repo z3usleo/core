@@ -3265,7 +3265,7 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 
     uint32 missChance = uint32(MeleeSpellMissChance(pVictim, attType, fullSkillDiff, spell)*100.0f);
     // Roll miss
-    uint32 tmp = missChance;
+    uint32 tmp = spell->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS ? 0 : missChance;
     if (roll < tmp)
         return SPELL_MISS_MISS;
 
@@ -3449,10 +3449,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     if (HitChance <  100) HitChance =  100;
     if (HitChance > 10000) HitChance = 10000;
 
-    int32 tmp = 10000 - HitChance;
+    int32 tmp = spell->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS ? 0 : 10000 - HitChance;
 
     int32 rand = irand(0,10000);
-    
+
     // Chaos Bolt cannot be deflected
     if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
         return SPELL_MISS_NONE;
@@ -7933,6 +7933,7 @@ uint32 Unit::MeleeDamageBonusDone(Unit *pVictim, uint32 pdamage,WeaponAttackType
         AuraList const& mModDamagePercentDone = GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_DONE);
         for(AuraList::const_iterator i = mModDamagePercentDone.begin(); i != mModDamagePercentDone.end(); ++i)
         {
+<<<<<<< HEAD
             if ((*i)->GetModifier()->m_miscvalue & schoolMask &&                                    // schoolmask has to fit with the intrinsic spell school...
                 (*i)->GetModifier()->m_miscvalue & SPELL_SCHOOL_MASK_NORMAL &&                      // ...AND schoolmask has to contain physical spell school (seems to be the most logic sollution)
                 ((*i)->GetSpellProto()->EquippedItemClass == -1 ||                                  // general, weapon independent
@@ -7940,6 +7941,12 @@ uint32 Unit::MeleeDamageBonusDone(Unit *pVictim, uint32 pdamage,WeaponAttackType
                 (*i)->GetSpellProto()->AttributesEx5 & SPELL_ATTR_EX5_WEAPON_DMG_MOD_ALL_DAMAGE &&  // OR aura affects ALL damage...
                 GetTypeId() == TYPEID_PLAYER &&
                 ((Player*)this)->HasItemFitToSpellReqirements((*i)->GetSpellProto()) ))             // ...AND the player has a weapon that fullfills requirements
+=======
+            if ((*i)->GetModifier()->m_miscvalue & schoolMask &&                         // schoolmask has to fit with the intrinsic spell school
+                (*i)->GetModifier()->m_miscvalue & GetMeleeDamageSchoolMask() &&         // AND schoolmask has to fit with weapon damage school (essential for non-physical spells)
+                (((*i)->GetSpellProto()->EquippedItemClass == -1) ||                     // general, weapon independent
+                (pWeapon && pWeapon->IsFitToSpellRequirements((*i)->GetSpellProto()))))  // OR used weapon fits aura requirements
+>>>>>>> rsa/master
             {
                 DonePercent *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
             }
