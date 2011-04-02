@@ -1041,9 +1041,15 @@ void Group::SendUpdate()
         data << uint8(m_groupType);                         // group type (flags in 3.3)
         data << uint8(citr->group);                         // groupid
         if (!isBGGroup())
+        {
             data << uint8(citr->flags);                     // group flags
-        else
             data << uint8(citr->roles);                     // roles mask
+        }
+        else
+        {
+            data << uint8(0);
+            data << uint8(0);
+        }
         if(m_groupType & GROUPTYPE_LFD)
         {
             data << uint8(0);
@@ -1065,9 +1071,15 @@ void Group::SendUpdate()
             data << uint8(onlineState);                     // online-state
             data << uint8(citr2->group);                    // groupid
             if (!isBGGroup())
+            {
                 data << uint8(citr2->flags);                // group flags
-            else
                 data << uint8(citr2->roles);                // 3.3, role?
+            }
+            else
+            {
+                data << uint8(0);
+                data << uint8(0);
+            }
         }
 
         data << m_leaderGuid;                               // leader guid
