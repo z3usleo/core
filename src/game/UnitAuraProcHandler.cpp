@@ -2755,7 +2755,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                         if (aur->GetHolder())
                         {
                             int32 amount = aur->GetAuraDuration() + triggerAmount * IN_MILLISECONDS;
-                            aur->SetAuraDuration(amount);
+                            aur->GetHolder()->SetAuraDuration(amount);
                             aur->GetHolder()->SendAuraUpdate(false);
                             return SPELL_AURA_PROC_OK;
                         }
