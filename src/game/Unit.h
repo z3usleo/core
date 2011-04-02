@@ -417,7 +417,6 @@ enum UnitState
 
     UNIT_STAT_IGNORE_PATHFINDING    = 0x00100000,               // do not use pathfinding in any MovementGenerator
 
-
     // masks (only for check)
 
     // can't move currently
@@ -1553,7 +1552,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         }
         bool isCharmedOwnedByPlayerOrPlayer() const { return GetCharmerOrOwnerOrOwnGuid().IsPlayer(); }
 
-        Player* GetSpellModOwner();
+        Player* GetSpellModOwner() const;
 
         Unit* GetOwner() const;
         Pet* GetPet() const;
@@ -1974,8 +1973,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         uint32 CalcNotIgnoreAbsorbDamage( uint32 damage, SpellSchoolMask damageSchoolMask, SpellEntry const* spellInfo = NULL);
         uint32 CalcNotIgnoreDamageRedunction( uint32 damage, SpellSchoolMask damageSchoolMask);
-        int32 CalculateBaseSpellDuration(SpellEntry const* spellProto, uint32* periodicTime = NULL);
-        uint32 CalculateSpellDuration(Unit const* caster, uint32 baseDuration, SpellEntry const* spellProto, SpellEffectIndex effect_index);
+        int32 CalculateAuraDuration(SpellEntry const* spellProto, uint32 effectMask, int32 duration, Unit const* caster);
+
         float CalculateLevelPenalty(SpellEntry const* spellProto) const;
 
         void addFollower(FollowerReference* pRef) { m_FollowingRefManager.insertFirst(pRef); }
@@ -1995,7 +1994,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void RemoveComboPointHolder(ObjectGuid guid) { m_ComboPointHolders.erase(guid); }
         void ClearComboPointHolders();
 
-        uint8 GetComboPoints() { return m_comboPoints; }
+        uint8 GetComboPoints() const { return m_comboPoints; }
         ObjectGuid const& GetComboTargetGuid() const { return m_comboTargetGuid; }
 
         void AddComboPoints(Unit* target, int8 count);
