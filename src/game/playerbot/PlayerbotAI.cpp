@@ -2934,7 +2934,6 @@ bool PlayerbotAI::CastSpell(uint32 spellId)
        m_bot->GetNearPoint(m_bot, x, y, z, 1, 5, 0);
        m_bot->Relocate(x,y,z);
        m_bot->SendHeartBeat(true);
-
        }
      */
 
